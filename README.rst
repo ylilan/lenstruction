@@ -11,21 +11,18 @@ The software is presented in Yang et al 2019 (in preparation).
 
 Installation
 ------------
-git clone the repo https://github.com/ylilan/lenstruction.git 
-
-
-.. code-block:: bash
-    $cd /where/you/git/clone/lenstruction
-
-.. code-block:: bash
-    $python setup.py install --user
+$ mkdir /foder
+$ cd /foder
+$ git clone https://github.com/ylilan/lenstruction.git 
+$ cd lenstruction/
+$ python setup.py install --user
 
 
 Requirements
 ------------
 make sure you have already installed lenstronomy (>version 0.9.2), if not, please instal lenstronomy first.    
-.. code-block:: bash
-    $ pip install lenstronomy --user
+
+$ pip install lenstronomy --user
 
 Modelling Features
 ------------
