@@ -8,20 +8,28 @@ lenstruction- cluster lensing source reconstruction package
     :target: https://travis-ci.org/ylilan/cluster_lenstronomy
 ``lenstruction``  is a package to perform source reonstruction in cluster strong lensing. For multiply-imaged source, the code correct lens model parameter  locally up to order flexion to improve the source reconstruction.  
 The software is presented in Yang et al 2019 (in preparation). 
+
 Installation
 ------------
 git clone the repo https://github.com/ylilan/lenstruction.git 
+
+
 .. code-block:: bash
     $cd /where/you/git/clone/lenstruction
+
 .. code-block:: bash
     $python setup.py install --user
+
+
 Requirements
 ------------
 make sure you have already installed lenstronomy (>version 0.9.2), if not, please instal lenstronomy first.    
 .. code-block:: bash
     $ pip install lenstronomy --user
+
 Modelling Features
 ------------
+
 Example notebooks
 ------------
 
