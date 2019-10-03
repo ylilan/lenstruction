@@ -12,9 +12,13 @@ The software is presented in Yang et al 2019 (in preparation).
 Installation
 ------------
 $ mkdir /foder
+
 $ cd /foder
+
 $ git clone https://github.com/ylilan/lenstruction.git 
+
 $ cd lenstruction/
+
 $ python setup.py install --user
 
 
