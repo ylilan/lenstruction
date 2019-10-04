@@ -69,31 +69,36 @@ class ClsrWorkflow(object):
             self._update_kwargs(kwargs_result_fix)
             _, _, _ = self.run_fit_sequence(flexion_add_fixed)
         elif bic_model_free < bic_model_fix:
+            print("Flexion is needed!")
             bic_list = [bic_model_fix, bic_model_free]
             chain_list = [chain_list_fix, chain_list_free]
             kwargs_result_list = [kwargs_result_fix,kwargs_result_free]
         return chain_list, kwargs_result_list, bic_list
 
 
-    def sourcemodel_comp(self, n_particles,n_iterations,sigma_scale,
-                         rh, n_max_range=[0], bic_model_in=[100000], chain_list_in=[],kwargs_results_in=[]):
+    def sourcemodel_comp(self,bic_model_in, chain_list_in, kwargs_results_in,
+                         rh, n_max_range=[0], n_particles=10,n_iterations=10,sigma_scale =1.0) :
         """
-        class to find the fitting results with lowest BIC value.
+
+        :param bic_model_in:
+        :param chain_list_in:
+        :param kwargs_results_in:
+        :param rh:
         :param n_max_range:
         :param n_particles:
         :param n_iterations:
         :param sigma_scale:
-        :param rh:
-        :param bic_model_in:
-        :return: fitting results with lowest BIC value,
-                and modeling results of models traversing in n_max_range (order in shapelets model).
+        :return:
         """
+        #:return: fitting results with lowest BIC value,
+        #        and modeling results of models traversing in n_max_range (order in shapelets model).
+       # """
         bic_model_list = bic_model_in
+        chain_list_list = chain_list_in
+        kwargs_result_list = kwargs_results_in
         bic_in_len = len(bic_model_in)
         bic_run = True
         beta0 = rh
-        chain_list_list = []
-        kwargs_result_list = []
         kwargs_pso = [['PSO', {'sigma_scale': sigma_scale, 'n_particles': n_particles, 'n_iterations': n_iterations}]]
         for nmax in n_max_range:
             if nmax < 0:
@@ -116,9 +121,10 @@ class ClsrWorkflow(object):
                 if bic_model >  bic_model_list[-1]:
                     bic_run = False
                     if bic_model > bic_model_in[-1]:
+                        print ("no necessary to add SHAPELETS !")
                         fix_kwargs_shapelet=[['update_settings', {'source_add_fixed': [[1, ['beta'], [rh]]]}]]
                         _, _, _ = self.run_fit_sequence(fix_kwargs_shapelet)
-                    print ("no neccessary to add model complexity!")
+                    print ("no necessary to increase model complexity!")
                 elif bic_model < bic_model_list[-1]:
                     chain_list_list.append(chain_list)
                     kwargs_result_list.append(kwargs_result)
@@ -126,10 +132,10 @@ class ClsrWorkflow(object):
                     print (bic_model, "currently is the lowest BIC value in bic_model_list=", bic_model_list)
         bic_sourcemodel = bic_model_list[bic_in_len:]
         if bic_sourcemodel ==[]:
-            chain_list_lowest = chain_list_in
-            kwargs_result_lowest = kwargs_results_in
+            chain_list_lowest = chain_list_in[-1]
+            kwargs_result_lowest = kwargs_results_in[-1]
         else:
-            index_bic_minima = np.where(bic_model_list == np.min(bic_model_list))[0][0] - bic_in_len
+            index_bic_minima = np.where(bic_model_list == np.min(bic_model_list))[0][0]
             chain_list_lowest = chain_list_list[index_bic_minima]
             kwargs_result_lowest = kwargs_result_list[index_bic_minima]
         return  chain_list_lowest, kwargs_result_lowest, chain_list_list, kwargs_result_list, bic_model_list

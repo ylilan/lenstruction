@@ -5,7 +5,6 @@ import lenstronomy.Util.util as util
 from lenstronomy.LensModel.numeric_lens_differentials import NumericLens
 from lenstronomy.Data.imaging_data import ImageData
 from lenstronomy.Cosmo.lens_cosmo import LensCosmo
-from astropy.io import fits
 
 
 class LensPreparation(object):
@@ -16,7 +15,7 @@ class LensPreparation(object):
     Or, you know, shear, convergency, shift, then you wanna know deflection maps.
 
     """
-    def __init__(self, zl, zs, xdeflection=None,ydeflection=None, gamma1=0,gamma2=0, kappa=0,lenseq='1'):
+    def __init__(self, zl, zs, xdeflection=None,ydeflection=None, gamma1=None,gamma2=None, kappa=None, lenseq='1'):
        """
 
        input the initial lens model.
@@ -31,37 +30,43 @@ class LensPreparation(object):
        """
        cosmo = LensCosmo(zl, zs)
        dlsds = cosmo.D_ds / cosmo.D_s
+       #alphax
        if xdeflection is None:
            self.alphax = None
-       else:
-           alphax_map_hat = -fits.open(xdeflection)[0].data
-           if lenseq == '1':
-               alphax_map_hat = alphax_map_hat
-           elif lenseq =='-1':
-               alphax_map_hat = -alphax_map_hat
-           self.alphax = alphax_map_hat * dlsds
-
+       elif lenseq == '1':
+           self.alphax = xdeflection* dlsds
+       elif lenseq =='-1':
+           self.alphax = -xdeflection * dlsds
+       #alphay
        if ydeflection is None:
            self.alphay = None
-       else:
-           alphay_map_hat = -fits.open(ydeflection)[0].data
-           if lenseq == '1':
-               alphay_map_hat = alphay_map_hat
-           elif lenseq =='-1':
-               alphay_map_hat = -alphay_map_hat
-           self.alphay = alphay_map_hat * dlsds
-       if lenseq == '1':
-           gamma1_map = -fits.open(gamma1)[0].data
-           gamma2_map = -fits.open(gamma2)[0].data
-           kappa_map  = -fits.open(kappa)[0].data
+       elif lenseq == '1':
+           self.alphay = ydeflection* dlsds
+       elif lenseq =='-1':
+           self.alphay = -ydeflection * dlsds
+       #gamma1
+       if gamma1 is None:
+           self.gamma1 = None
+       elif lenseq == '1':
+           self.gamma1 = gamma1 * dlsds
        elif lenseq == '-1':
-           gamma1_map = fits.open(gamma1)[0].data
-           gamma2_map = fits.open(gamma2)[0].data
-           kappa_map  = fits.open(kappa)[0].data
+           self.gamma1 = -gamma1 * dlsds
+       #gamma2
+       if gamma2 is None:
+           self.gamma2 = None
+       elif lenseq == '1':
+           self.gamma2 = gamma2 * dlsds
+       elif lenseq == '-1':
+           self.gamma2 = -gamma2 * dlsds
+       #kappa
+       if kappa is None:
+           self.kappa = None
+       elif lenseq == '1':
+           self.kappa = kappa * dlsds
+       elif lenseq == '-1':
+           self.kappa = -kappa * dlsds
 
-       self.gamma1 = gamma1_map* dlsds
-       self.gamma2 = gamma2_map* dlsds
-       self.kappa =  kappa_map * dlsds
+
 
     def kwargs_lens_configuration(self,ximg_list, yimg_list, kwargs_data_joint, fixed_index=None,
                                   lens_model_list= ['SHIFT','SHEAR','CONVERGENCE','FLEXIONFG'], diff = 0.1):
