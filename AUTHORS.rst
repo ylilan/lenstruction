@@ -5,9 +5,9 @@ Credits
 Development Lead
 ----------------
 
-* yang lilan <ylilian0630@gmail.com>
+* Yang Lilan <ylilian0630@gmail.com>
 
 Contributors
 ------------
 
-None yet. Why not be the first?
+* Simon Birrer <sibirrer@gmail.com>
