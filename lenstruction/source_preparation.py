@@ -1,16 +1,17 @@
+from __future__ import print_function
 
 class SourcePreparation(object):
     """
      This class is used to do initialize kwargs of the source light models,
      the default light models are sersic and shapelets, ['SERSIC_ELLIPSE','SHAPELETS'].
     """
-    def __init__(self,source_model_list=['SERSIC_ELLIPSE','SHAPELETS']):
+    def __init__(self, source_model_list=['SERSIC_ELLIPSE','SHAPELETS']):
         """
         :param source_model_list: list of strings, name of lightmodel profiles.
         """
         self.source_model_list = source_model_list
 
-    def params(self,betax, betay, deltaPix, source_params = None):
+    def params(self, deltaPix, source_params = None,betax=0, betay=0):
         """
         source parameters configuration in lenstronomy keywords arguments.
         :param betax: centerx in source plane
@@ -62,7 +63,6 @@ class SourcePreparation(object):
             source_constrain ={'joint_source_with_source': [[0, 1, ['center_x', 'center_y']]]}
         return source_constrain
 
-    @property
     def model_list(self):
         """
         :return: source model list
