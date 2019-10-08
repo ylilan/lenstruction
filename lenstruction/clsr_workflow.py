@@ -38,10 +38,17 @@ class ClsrWorkflow(object):
 
 
     def lensmodel_comp(self, sigma_scale, n_particles,n_iterations,
-                       num_img, fixed_index,lens_model_list_in):
+                       num_img, fixed_index,lens_model_list_in,flexion_option=True):
         """
         function to add lens model complexity,
         currently, we only consider up to flexion term.
+        :param sigma_scale:
+        :param n_particles:
+        :param n_iterations:
+        :param num_img:
+        :param fixed_index:
+        :param lens_model_list_in:
+        :param flexion_option: bool, default is taking flexion into consideration
         :return: necessary lens model complexity
         """
         num_lens_model_list_in = len(lens_model_list_in)
@@ -54,13 +61,16 @@ class ClsrWorkflow(object):
                 lens_flexion_index = (i + 1) * num_lens_model_list_in - 1
                 lens_remove_fixed_list.append([lens_flexion_index, ['G1', 'G2', 'F1', 'F2'], [0, 0, 0, 0]])
                 lens_add_fixed_list.append([lens_flexion_index, ['G1', 'G2', 'F1', 'F2'], [0, 0, 0, 0]])
-        flexion_remove_fixed = [['update_settings', {'lens_remove_fixed': lens_remove_fixed_list}]]
         flexion_add_fixed = [['update_settings', {'lens_add_fixed': lens_add_fixed_list}]]
         kwargs_pso = [['PSO', {'sigma_scale': sigma_scale, 'n_particles': n_particles, 'n_iterations': n_iterations}]]
         fitting_kwargs_fix =  flexion_add_fixed+ kwargs_pso
-        fitting_kwargs_free = flexion_remove_fixed + kwargs_pso
         bic_model_fix, chain_list_fix, kwargs_result_fix = self.run_fit_sequence(fitting_kwargs_fix)
-        bic_model_free, chain_list_free, kwargs_result_free = self.run_fit_sequence(fitting_kwargs_free)
+        if flexion_option:
+            flexion_remove_fixed = [['update_settings', {'lens_remove_fixed': lens_remove_fixed_list}]]
+            fitting_kwargs_free = flexion_remove_fixed + kwargs_pso
+            bic_model_free, chain_list_free, kwargs_result_free = self.run_fit_sequence(fitting_kwargs_free)
+        else:
+            bic_model_free = 10000000
         if bic_model_free > bic_model_fix:
             print ("No necessary to add flexion!")
             bic_list = [bic_model_fix]
@@ -77,7 +87,7 @@ class ClsrWorkflow(object):
 
 
     def sourcemodel_comp(self,bic_model_in, chain_list_in, kwargs_results_in,
-                         rh, n_max_range=[0], n_particles=10,n_iterations=10,sigma_scale =1.0) :
+                         rh, n_max_range=[0], n_particles=10,n_iterations=10,sigma_scale =1.0,bic_option=True) :
         """
 
         :param bic_model_in:
@@ -119,11 +129,16 @@ class ClsrWorkflow(object):
                 print ("nmax",nmax,"fitting_kwargs",fitting_kwargs)
                 bic_model,chain_list, kwargs_result = self.run_fit_sequence(fitting_kwargs)
                 if bic_model >  bic_model_list[-1]:
-                    bic_run = False
-                    if bic_model > bic_model_in[-1]:
-                        print ("no necessary to add SHAPELETS !")
-                        fix_kwargs_shapelet=[['update_settings', {'source_add_fixed': [[1, ['beta'], [rh]]]}]]
-                        _, _, _ = self.run_fit_sequence(fix_kwargs_shapelet)
+                    if bic_option:
+                        bic_run = False
+                        if bic_model > bic_model_in[-1]:
+                            print ("no necessary to add SHAPELETS !")
+                            fix_kwargs_shapelet=[['update_settings', {'source_add_fixed': [[1, ['beta'], [rh]]]}]]
+                            _, _, _ = self.run_fit_sequence(fix_kwargs_shapelet)
+                    elif not bic_option:
+                        chain_list_list.append(chain_list)
+                        kwargs_result_list.append(kwargs_result)
+                        bic_model_list.append(bic_model)
                     print ("no necessary to increase model complexity!")
                 elif bic_model < bic_model_list[-1]:
                     chain_list_list.append(chain_list)
