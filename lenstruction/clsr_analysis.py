@@ -65,7 +65,7 @@ class ClsrAnalysis(object):
         model_plot = ModelPlot(self.multi_band_list, self.kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat",
                  multi_band_type=self.multi_band_type)
         num_bands = len(self.kwargs_data_joint['multi_band_list'])
-        f, axes = plt.subplots(num_bands, 3, figsize=(16, 15))
+        f, axes = plt.subplots(num_bands, 3, figsize=(18, 15))
         for band_index in range(num_bands):
             if num_bands >1:
                 ax1 = axes[band_index, 0]
