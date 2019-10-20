@@ -179,7 +179,7 @@ class DataPreparation(object):
        self.raw_image = image
        if self.interaction:
             self.plot_segmentation(image, segments_deblend_list, xcenter, ycenter, c_index)
-            source_mask_index = input('Hint: input segmentation index (list format), e.g.,[0,1]. =')
+            source_mask_index = [int(number) for number in input('Enter a list element separated by space, e.g., 0 1 ').split()]
             src_mask = np.zeros_like(image)
             for i in source_mask_index:
                 src_mask = src_mask + obj_masks[i]
