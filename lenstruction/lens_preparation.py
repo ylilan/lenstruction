@@ -190,7 +190,7 @@ class LensPreparation(object):
                     {'F1': 0, 'F2': 0, 'G1': 0, 'G2': 0, 'ra_0': ra_center, 'dec_0': dec_center})
         return kwargs_lens
 
-    def _cal_kwargs_lens(self,x, y, kwargs_data, lens_model_list, diff= 0.01,):
+    def _cal_kwargs_lens(self,x, y, kwargs_data, lens_model_list, diff= 0.01):
         """
         Initial lens parameters, deduced from deflection maps.
         :param x: x coordinate of lensed image
