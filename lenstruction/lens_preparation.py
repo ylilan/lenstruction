@@ -15,7 +15,7 @@ class LensPreparation(object):
     Or, you know, shear, convergency, shift, then you wanna know deflection maps.
 
     """
-    def __init__(self, zl, zs, xdeflection=None,ydeflection=None, gamma1=None,gamma2=None, kappa=None, lenseq='1'):
+    def __init__(self, zl, zs, xdeflection=None,ydeflection=None, gamma1=None,gamma2=None, kappa=None):
        """
 
        input the initial lens model.
@@ -26,50 +26,42 @@ class LensPreparation(object):
        :param gamma1: gamma1 map of shear
        :param gamma2: gamma2 map of shear
        :param kappa: convergence map
-       :param lenseq: '1'/'-1', corresponding to lens equation beta = theta +/- alpha
        """
        cosmo = LensCosmo(zl, zs)
        dlsds = cosmo.D_ds / cosmo.D_s
+       self.dlsds = dlsds
        #alphax
        if xdeflection is None:
            self.alphax = None
-       elif lenseq == '1':
+       else:
            self.alphax = xdeflection* dlsds
-       elif lenseq =='-1':
-           self.alphax = -xdeflection * dlsds
        #alphay
        if ydeflection is None:
            self.alphay = None
-       elif lenseq == '1':
+       else:
            self.alphay = ydeflection* dlsds
-       elif lenseq =='-1':
-           self.alphay = -ydeflection * dlsds
        #gamma1
        if gamma1 is None:
            self.gamma1 = None
-       elif lenseq == '1':
+       else:
            self.gamma1 = gamma1 * dlsds
-       elif lenseq == '-1':
-           self.gamma1 = -gamma1 * dlsds
        #gamma2
        if gamma2 is None:
            self.gamma2 = None
-       elif lenseq == '1':
+       else:
            self.gamma2 = gamma2 * dlsds
-       elif lenseq == '-1':
-           self.gamma2 = -gamma2 * dlsds
        #kappa
        if kappa is None:
            self.kappa = None
-       elif lenseq == '1':
+       else:
            self.kappa = kappa * dlsds
-       elif lenseq == '-1':
-           self.kappa = -kappa * dlsds
+
+
 
 
 
     def kwargs_lens_configuration(self,ximg_list, yimg_list, kwargs_data_joint, fixed_index=None,
-                                  lens_model_list= ['SHIFT','SHEAR','CONVERGENCE','FLEXIONFG'], diff = 0.1):
+                                  lens_model_list= ['SHIFT','SHEAR','CONVERGENCE','FLEXIONFG'], diff = 0.03):
         """
 
         :param ximg_list: list, x cooridinate of lensed image
@@ -88,12 +80,13 @@ class LensPreparation(object):
         self.img_index = img_index
         kwagrs_lens_list = []
         kwargs_lens_init = []
+        magnification_list = []
         for i in range(len(ximg_list)):
              kwargs_data = kwargs_data_joint['multi_band_list'][i][0]
-             kwargs_lens = self.lens_param_initial(x= ximg_list[i], y = yimg_list[i], kwargs_data =kwargs_data,
-                                                   lens_model_list=lens_model_list, diff=diff)
+             kwargs_lens, magnification = self.lens_param_initial(x= ximg_list[i], y = yimg_list[i], kwargs_data =kwargs_data, lens_model_list=lens_model_list, diff=diff)
              kwagrs_lens_list.append(kwargs_lens)
              kwargs_lens_init += (kwargs_lens)
+             magnification_list.append(magnification)
         kwargs_lens_sigma_tmp = []
         kwargs_fixed_lens_tmp = []
         kwargs_lower_lens_tmp = []
@@ -136,6 +129,7 @@ class LensPreparation(object):
         kwargs_fixed_lens=kwargs_fixed_lens_tmp
         self.lens_model_list = lens_model_list
         self.num_img = len(ximg_list)
+        self.magnification_list = magnification_list
         lens_params= [kwargs_lens_init, kwargs_lens_sigma, kwargs_fixed_lens, kwargs_lower_lens, kwargs_upper_lens]
         return lens_params
 
@@ -153,10 +147,10 @@ class LensPreparation(object):
         :return:
         """
         if self.alphax is not None and self.alphay is not None:
-            kwargs_lens = self._cal_kwargs_lens(x=x, y=y, kwargs_data=kwargs_data, diff=diff, lens_model_list=lens_model_list)
+            kwargs_lens,magnification  = self._cal_kwargs_lens(x=x, y=y, kwargs_data=kwargs_data, diff=diff, lens_model_list=lens_model_list)
         else:
-            kwargs_lens = self._read_kwargs_lens(x=x, y=y, kwargs_data=kwargs_data, lens_model_list=lens_model_list)
-        return kwargs_lens
+            kwargs_lens, magnification = self._read_kwargs_lens(x=x, y=y, kwargs_data=kwargs_data, lens_model_list=lens_model_list)
+        return kwargs_lens, magnification
 
 
 
@@ -188,9 +182,10 @@ class LensPreparation(object):
             elif lens_type == 'FLEXIONFG':
                 kwargs_lens.append(
                     {'F1': 0, 'F2': 0, 'G1': 0, 'G2': 0, 'ra_0': ra_center, 'dec_0': dec_center})
-        return kwargs_lens
+        magnification = 1./ ((1 - kappa)**2 - (gamma1**2 + gamma2**2))
+        return kwargs_lens, magnification
 
-    def _cal_kwargs_lens(self,x, y, kwargs_data, lens_model_list, diff= 0.01):
+    def _cal_kwargs_lens(self,x, y, kwargs_data, lens_model_list, diff):
         """
         Initial lens parameters, deduced from deflection maps.
         :param x: x coordinate of lensed image
@@ -209,7 +204,6 @@ class LensPreparation(object):
         dec_center = yaxes[int(r_cut + 1), int(r_cut + 1)]
         kwargs_lens_in = [{'grid_interp_x': xaxes[0], 'grid_interp_y': yaxes[:, 0], 'f_x': alphax,
                            'f_y': alphay}]
-
         kwargs_lens=[]
         for lens_type in lens_model_list:
             if lens_type=='INTERPOL':
@@ -240,7 +234,11 @@ class LensPreparation(object):
                 G1_c = (g1_c - g3_c) * 0.5 - g3_c
                 G2_c = (g2_c - g4_c) * 0.5 - g4_c
                 kwargs_lens.append({'F1': F1_c, 'F2': F2_c, 'G1': G1_c, 'G2': G2_c, 'ra_0': ra_center, 'dec_0': dec_center})
-        return kwargs_lens
+
+        magnification = NumericLens(['INTERPOL']).magnification(util.image2array(xaxes),
+                                                                  util.image2array(yaxes), kwargs=kwargs_lens_in, diff = diff)
+        magnification = np.mean(magnification)
+        return kwargs_lens, magnification
 
 
 
