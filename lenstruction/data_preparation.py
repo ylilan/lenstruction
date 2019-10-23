@@ -1,14 +1,11 @@
 from __future__ import print_function
-
 __author__ = 'lilan yang'
 
 import numpy as np
 from scipy import ndimage
 import matplotlib.pyplot as plt
 from astropy.io import fits
-
 from lenstronomy.Util import kernel_util
-
 from astropy.stats import sigma_clipped_stats
 from astropy import wcs
 from photutils import detect_threshold, detect_sources,deblend_sources, source_properties
@@ -59,24 +56,22 @@ class DataPreparation(object):
 
     def radec2detector(self,ra,dec):
         """
-        transform (ra,dec) in deg to director coordinate
+        WCS transformation from world to pixel coordinates
         :param ra: ra in deg
         :param dec: dec in deg
         :return:
         """
-          # get world2pix information from header
         y_detector= np.int(self.wcs.wcs_world2pix([[ra, dec]], 1)[0][0])
         x_detector = (np.int(self.wcs.wcs_world2pix([[ra, dec]], 1)[0][1]))
 
         return x_detector, y_detector
 
-    def cut_image(self, x, y, r_cut, image=None):
+    def cut_image(self, x, y, r_cut):
         """
          Function used to cut input image.
-         :param x: x coordinate
-         :param y: y coordinate
+         :param x: int, x coordinate in pixel unit
+         :param y: int, y coordinate in pixel unit
          :param r_cut: int format value, radius of cut out image
-         :param image: parent image
          :return: cutted image
          """
         image_cutted = self.image[x - r_cut:x + r_cut + 1, y - r_cut:y + r_cut + 1]
@@ -85,12 +80,9 @@ class DataPreparation(object):
     def _seg_image(self, x, y, r_cut=100):
         """
         detect and deblend sources into segmentation maps
-        :param x:
-        :param y:
-        :param r_cut:
-        :param image_name:
-        :param title_name1:
-        :param title_name2:
+        :param x: int, x coordinate in pixel unit
+        :param y: int, y coordinate in pixel unit
+        :param r_cut:  int format value, radius of cut out image
         :return:
         """
         snr=self.snr
@@ -133,11 +125,10 @@ class DataPreparation(object):
 
     def cutsize(self,x,y,r_cut=100,font_size=20):
      """
-
-     :param x: x coordinate
-     :param y: y coordinate
-     :param r_cut: int format value, radius of cut out image
-     :param image_name: string, name of the image
+      determine cutsize of the image
+     :param x: int, x coordinate in pixel unit
+     :param y: y int, coordinate n pixel unit
+     :param r_cut: int, radius of cut out image
      :return: cutout size
      """
      cutsize_data = r_cut
@@ -166,8 +157,8 @@ class DataPreparation(object):
     def data_assemble(self, x,y, r_cut, add_mask=5):
        """
        Function to pick up the pieces of data.
-       :param x: x coordinate.
-       :param y: y coordinate.
+       :param x: x coordinate in pixel unit
+       :param y: y coordinate in pixel unit
        :param r_cut: radius size of the data.
        :param add_mask: number of pixels adding around picked pieces
        :return: kwargs_data
@@ -179,7 +170,7 @@ class DataPreparation(object):
        self.raw_image = image
        if self.interaction:
             self.plot_segmentation(image, segments_deblend_list, xcenter, ycenter, c_index)
-            source_mask_index = [int(number) for number in input('Enter a list element separated by space, e.g., 0 1 ').split()]
+            source_mask_index = [int(number) for number in input('Selection of data via segmentation index separated by space, e.g., 0 1 ').split()]
             src_mask = np.zeros_like(image)
             for i in source_mask_index:
                 src_mask = src_mask + obj_masks[i]
@@ -233,13 +224,14 @@ class DataPreparation(object):
         else:
             pixel_size=pixel_size
         kwargs_psf = {'psf_type': 'PIXEL', 'kernel_point_source': image_psf_cut, 'pixel_size': pixel_size}
+        # TODO adding simulated psf
         return kwargs_psf
 
 
 
-    def kwargs_data_psf(self, ra, dec, ra_psf, dec_psf, r_cut=100, add_mask=5, multi_band_type='joint-linear',img_name='datapreparation',cutout_text='lensed image'):
+    def params(self, ra, dec, ra_psf, dec_psf, r_cut=100, add_mask=5, multi_band_type='joint-linear',img_name='data',cutout_text='lensed image'):
         """
-
+         image data parameters configuration in lenstronomy keywords arguments
         :param ra:
         :param dec:
         :param ra_psf:
@@ -247,7 +239,7 @@ class DataPreparation(object):
         :param r_cut:
         :param add_mask:
         :param multi_band_type:
-        :return:
+        :return: x, y coordinate in pixel units, image data keywords arguments
         """
         kwargs_numerics = self.numerics()
         multi_band_list =[]
@@ -272,8 +264,17 @@ class DataPreparation(object):
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': multi_band_type}
         return x_detector,y_detector,kwargs_data_joint
 
-    def numerics(self):
-        kwargs_numerics={'supersampling_factor': 1, 'supersampling_convolution': False}
+
+
+
+    def numerics(self, supersampling_factor=1, supersampling_convolution=False):
+        """
+        numerical option of the image data and convolution
+        :param supersampling_factor: int, factor of higher resolution sub-pixel sampling of surface brightness
+        :param supersampling_convolution: bool, if True, performs (part of) the convolution on the super-sampled grid/pixels
+        :return: numerical arguments
+        """
+        kwargs_numerics={'supersampling_factor': supersampling_factor, 'supersampling_convolution': supersampling_convolution}
         return kwargs_numerics
 
 
@@ -305,10 +306,14 @@ class DataPreparation(object):
 
 
 
-    def plot_data_assemble(self,kwargs_seg,add_mask=5,img_name='datapreparation.pdf',cutout_text='lensed image',font_size=28):
+    def plot_data_assemble(self,kwargs_seg, add_mask ,img_name='data.pdf',cutout_text='lensed image',font_size=28):
         """
-
-        :param add_mask:
+        plot data assemle procession
+        :param kwargs_seg: selected segmentation kwargs
+        :param add_mask: int, numbers of pixels added surround the selected segmentation
+        :param img_name: string, figure name
+        :param cutout_text: string, figure label
+        :param font_size: int, title font size
         :return:
         """
         mask = self.data_mask
