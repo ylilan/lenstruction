@@ -11,48 +11,67 @@ class SourcePreparation(object):
         """
         self.source_model_list = source_model_list
 
-    def params(self, deltaPix, source_params = None,betax=0, betay=0):
+    def params(self, re, betax=0, betay=0, kwargs_init = None, kwargs_sigma = None, kwargs_fixed = None, kwargs_lower = None,
+                         kwargs_upper = None):
         """
         source parameters configuration in lenstronomy keywords arguments.
+        :param re: float (arcsec unit), typical length scale in source plane
         :param betax: centerx in source plane
-        :param betay:  centery in source plane
-        :param deltaPix: pixel scale in image plane
-        :param source_params: list of source parameters configuration,
-        [kwargs_source_init, kwargs_source_sigma, kwargs_fixed_source, kwargs_lower_source,
-                         kwargs_upper_source]
-        :return:
+        :param betay: centery in source plane
+        :param kwargs_init: list, initial keywords arguments
+        :param kwargs_sigma: list, sigma keywords arguments
+        :param kwargs_fixed: list, fixed keywords arguments
+        :param kwargs_lower: list, lower boundary keywords arguments
+        :param kwargs_upper: list, upper boundary keywords arguments
+        :return: list of source parameters keywords arguments
         """
-        kwargs_source_init = []
-        kwargs_source_sigma = []
-        kwargs_lower_source = []
-        kwargs_upper_source = []
-        kwargs_fixed_source =[]
+        kwargs_init_tmp = []
+        kwargs_sigma_tmp = []
+        kwargs_lower_tmp = []
+        kwargs_upper_tmp = []
+        kwargs_fixed_tmp =[]
         for source_type in self.source_model_list:
             if source_type == 'SERSIC_ELLIPSE':
-                kwargs_source_init.append({'R_sersic': deltaPix, 'center_x': betax, 'center_y': betay,
-                                           'e1': 0., 'e2': 0., 'n_sersic': 1})
-                kwargs_source_sigma.append({'R_sersic': deltaPix, 'n_sersic': 0.1, 'e1': 0.1,
-                                            'e2': 0.1, 'center_x': 0.03, 'center_y': 0.03})
-                kwargs_lower_source.append({'R_sersic': 0, 'n_sersic': 0.1,
-                                            'e1': -1, 'e2': -1, 'center_x': betax - 1,'center_y': betay - 1})
-                kwargs_upper_source.append({'R_sersic': 100, 'n_sersic': 8, 'e1': 1, 'e2': 1,
-                                            'center_x': betax + 1, 'center_y': betay + 1})
-                kwargs_fixed_source.append({})
-
+                kwargs_init_tmp.append({'R_sersic': re, 'center_x': betax, 'center_y': betay,
+                                           'e1': 0., 'e2': 0., 'n_sersic': 2})
+                kwargs_sigma_tmp.append({'R_sersic': re, 'n_sersic': 1, 'e1': 0.1, 'e2': 0.1, 'center_x': re, 'center_y': re})
+                kwargs_lower_tmp.append({'R_sersic': 0, 'n_sersic': 0.1, 'e1': -1, 'e2': -1, 'center_x': betax - 1,'center_y': betay - 1})
+                kwargs_upper_tmp.append({'R_sersic': 100, 'n_sersic': 8, 'e1': 1, 'e2': 1,   'center_x': betax + 1, 'center_y': betay + 1})
+                kwargs_fixed_tmp.append({})
             elif source_type == 'SHAPELETS':
-                kwargs_source_init.append({'n_max': -1, 'beta': 0.1, 'center_x':betax, 'center_y': betay})
-                kwargs_source_sigma.append( {'beta': deltaPix,
-                                             'center_x': deltaPix, 'center_y': deltaPix})
-                kwargs_lower_source.append({'beta': 0,
-                                            'center_x': betax - 1, 'center_y': betay - 1})
-                kwargs_upper_source.append({'beta': 100, 'center_x':betax + 1,'center_y': betay + 1})
-                kwargs_fixed_source.append({'n_max': -1, 'beta':deltaPix })
-        if source_params is None:
-            sourceparams = [kwargs_source_init, kwargs_source_sigma, kwargs_fixed_source, kwargs_lower_source,
-                         kwargs_upper_source]
+                kwargs_init_tmp.append({'n_max': -1, 'beta': 0.1, 'center_x':betax, 'center_y': betay})
+                kwargs_sigma_tmp.append({'beta': re, 'center_x': re, 'center_y': re})
+                kwargs_lower_tmp.append({'beta': 0, 'center_x': betax - 1, 'center_y': betay - 1})
+                kwargs_upper_tmp.append({'beta': 100, 'center_x':betax + 1,'center_y': betay + 1})
+                kwargs_fixed_tmp.append({'n_max': -1, 'beta':re })
+        if  kwargs_init is None:
+            kwargs_source_init = kwargs_init_tmp
         else:
-            sourceparams = source_params
-        return sourceparams
+            kwargs_source_init = kwargs_init
+
+        if  kwargs_sigma is None:
+            kwargs_source_sigma = kwargs_sigma_tmp
+        else:
+            kwargs_source_sigma = kwargs_sigma
+
+        if  kwargs_fixed is None:
+            kwargs_fixed_source = kwargs_fixed_tmp
+        else:
+            kwargs_fixed_source = kwargs_fixed
+
+        if  kwargs_lower is None:
+            kwargs_lower_source = kwargs_lower_tmp
+        else:
+            kwargs_lower_source = kwargs_lower
+
+        if kwargs_upper is None:
+            kwargs_upper_source = kwargs_upper_tmp
+        else:
+            kwargs_upper_source = kwargs_upper
+        source_params = [kwargs_source_init, kwargs_source_sigma, kwargs_fixed_source, kwargs_lower_source, kwargs_upper_source]
+        return source_params
+
+
 
     def constrain(self, source_constrain=None):
         """
