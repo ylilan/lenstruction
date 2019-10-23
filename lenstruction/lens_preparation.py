@@ -58,19 +58,18 @@ class LensPreparation(object):
 
 
 
-
-
-    def kwargs_lens_configuration(self,ximg_list, yimg_list, kwargs_data_joint, fixed_index=None,
-                                  lens_model_list= ['SHIFT','SHEAR','CONVERGENCE','FLEXIONFG'], diff = 0.03):
+    def params(self,ximg_list, yimg_list, kwargs_data_joint, fixed_index=None,
+                                  lens_model_list= ['SHIFT','SHEAR','CONVERGENCE','FLEXIONFG'], diff = 0.03,
+                                  kwargs_sigma = None, kwargs_fixed = None, kwargs_lower = None, kwargs_upper = None):
         """
-
+        lens model parameters configuration in lenstronomy keywords arguments
         :param ximg_list: list, x cooridinate of lensed image
         :param yimg_list: list, y cooridinate of lensed image
         :param kwargs_data_joint: list, image data arguments
         :param fixed_index: int, fixed image index
         :param lens_model_list: string list, name of lens model
-        :param diff: float, scale of derivation
-        :return:
+        :param diff: float (arcsec), scale of derivation
+        :return: lens model keywords arguments
         """
 
         if fixed_index is not None:
@@ -115,18 +114,30 @@ class LensPreparation(object):
                         kwargs_fixed_lens_tmp.append(kwagrs_lens_list[img_index][2])
                     else:
                         kwargs_fixed_lens_tmp.append({'ra_0': kwagrs_lens_list[i][2]['ra_0'],'dec_0': kwagrs_lens_list[i][1]['dec_0']})
-                    kwargs_lower_lens_tmp.append({'kappa_ext':-1})
-                    kwargs_upper_lens_tmp.append({'kappa_ext':1})
+                    kwargs_lower_lens_tmp.append({'kappa_ext':-0.2}) #
+                    kwargs_upper_lens_tmp.append({'kappa_ext':3}) #
                 elif lens_type == 'FLEXIONFG':
                     kwargs_lens_sigma_tmp.append({'F1':0.01,'F2':0.01,'G1':0.01,'G2':0.01})
                     kwargs_fixed_lens_tmp.append({'ra_0': kwagrs_lens_list[i][3]['ra_0'],'dec_0': kwagrs_lens_list[i][3]['dec_0'],
                                          'F1':0,'F2':0,'G1':0,'G2':0})
                     kwargs_lower_lens_tmp.append({'F1':-1,'F2':-1,'G1':-1,'G2':-1})
                     kwargs_upper_lens_tmp.append({'F1':1,'F2':1,'G1':1,'G2':1})
-        kwargs_lens_sigma=kwargs_lens_sigma_tmp
-        kwargs_lower_lens=kwargs_lower_lens_tmp
-        kwargs_upper_lens=kwargs_upper_lens_tmp
-        kwargs_fixed_lens=kwargs_fixed_lens_tmp
+        if kwargs_sigma is None:
+            kwargs_lens_sigma=kwargs_lens_sigma_tmp
+        else:
+            kwargs_lens_sigma = kwargs_sigma
+        if kwargs_lower is None:
+            kwargs_lower_lens = kwargs_lower_lens_tmp
+        else:
+            kwargs_lower_lens = kwargs_lower
+        if kwargs_upper is None:
+            kwargs_upper_lens = kwargs_upper_lens_tmp
+        else:
+            kwargs_upper_lens = kwargs_upper
+        if kwargs_fixed is None:
+            kwargs_fixed_lens=kwargs_fixed_lens_tmp
+        else:
+            kwargs_fixed_lens = kwargs_fixed
         self.lens_model_list = lens_model_list
         self.num_img = len(ximg_list)
         self.magnification_list = magnification_list
@@ -237,6 +248,7 @@ class LensPreparation(object):
 
         magnification = NumericLens(['INTERPOL']).magnification(util.image2array(xaxes),
                                                                   util.image2array(yaxes), kwargs=kwargs_lens_in, diff = diff)
+        #TODO check NumericLens()
         magnification = np.mean(magnification)
         return kwargs_lens, magnification
 
@@ -262,20 +274,6 @@ class LensPreparation(object):
             lens_model_index_list = {'lens_model_list': lensmodel_list,'index_lens_model_list': index_lens_model_list}
         return lens_model_index_list
 
-
-
-    #TODO isolate parameters sigma, lower and upper boundary setting
-    def _lens_param_fixed(self, lens_param_fixed=None):
-        lens_param_fixed = lens_param_fixed
-        return lens_param_fixed
-
-    def _lens_param_upper(self, lens_param_upper=None):
-        lens_param_upper = lens_param_upper
-        return lens_param_upper
-
-    def _lens_param_lower(self, lens_param_lower=None):
-        lens_param_lower = lens_param_lower
-        return lens_param_lower
 
 
 
