@@ -37,28 +37,25 @@ class ClsrWorkflow(object):
         return bic_model,chain_list, kwargs_result
 
 
-    def lensmodel_comp(self, sigma_scale, n_particles,n_iterations,
-                       num_img, fixed_index,lens_model_list_in,flexion_option=True):
+    def lensmodel_comp(self, num_img, fixed_index, n_particles,n_iterations,sigma_scale, num_lens_model,flexion_option=True):
         """
-        function to add lens model complexity,
-        currently, we only consider up to flexion term.
-        :param sigma_scale:
-        :param n_particles:
-        :param n_iterations:
-        :param num_img:
-        :param fixed_index:
-        :param lens_model_list_in:
+        function to figure out the necessary of increasing lens model complexity. Currently, we only consider up to flexion term.
+        :param n_particles: particles numbers of PSO
+        :param n_iterations: iteration numbers of PSO
+        :param sigma_scale: sigma scale for PSO
+        :param num_img: int, numbers of lensed image
+        :param fixed_index: int, index of fixed lensed image
+        :param num_lens_model: numbers of strings contained in lens model list
         :param flexion_option: bool, default is taking flexion into consideration
-        :return: necessary lens model complexity
+        :return: pso results, fitting results of necessary lens model complexity, bic values
         """
-        num_lens_model_list_in = len(lens_model_list_in)
         lens_remove_fixed_list = []
         lens_add_fixed_list = []
         for i in range(num_img):
             if i == fixed_index:
-                print ("lens model keep fixed in frame:", i + 1)
+                print ("lens model keep fixed in frame:", i+1)
             else:
-                lens_flexion_index = (i + 1) * num_lens_model_list_in - 1
+                lens_flexion_index = (i + 1) * num_lens_model - 1
                 lens_remove_fixed_list.append([lens_flexion_index, ['G1', 'G2', 'F1', 'F2'], [0, 0, 0, 0]])
                 lens_add_fixed_list.append([lens_flexion_index, ['G1', 'G2', 'F1', 'F2'], [0, 0, 0, 0]])
         flexion_add_fixed = [['update_settings', {'lens_add_fixed': lens_add_fixed_list}]]
@@ -86,29 +83,27 @@ class ClsrWorkflow(object):
         return chain_list, kwargs_result_list, bic_list
 
 
-    def sourcemodel_comp(self,bic_model_in, chain_list_in, kwargs_results_in,
-                         rh, n_max_range=[0], n_particles=10,n_iterations=10,sigma_scale =1.0,bic_option=True) :
+    def sourcemodel_comp(self, n_max_range=[0], sr = 0, n_particles=10, n_iterations=10,sigma_scale =1.0,
+                         bic_model_in = [100000], chain_list_in = [0], kwargs_results_in = [0], bic_option=True) :
         """
-
-        :param bic_model_in:
-        :param chain_list_in:
-        :param kwargs_results_in:
-        :param rh:
-        :param n_max_range:
-        :param n_particles:
-        :param n_iterations:
-        :param sigma_scale:
-        :return:
+        function to found the best fitting results among source models related to numbers of shapelets basis
+        :param n_max_range: shapelets basis selection range
+        :param sr: typical scale (") in source plane
+        :param n_particles: particles numbers of PSO
+        :param n_iterations: iteration numbers of PSO
+        :param sigma_scale: sigma scale for PSO
+        :param bic_model_in: BIC value of models before adding shapelets to source model
+        :param chain_list_in: PSO chain results of models before adding shapelets to source model
+        :param kwargs_results_in: fitting results of models before adding shapelets to source model
+        :return: best-fit PSO results, best-fits results, PSO results for n_max_range, fitting results for n_max_range,
+                bic values for all models
         """
-        #:return: fitting results with lowest BIC value,
-        #        and modeling results of models traversing in n_max_range (order in shapelets model).
-       # """
         bic_model_list = bic_model_in
         chain_list_list = chain_list_in
         kwargs_result_list = kwargs_results_in
         bic_in_len = len(bic_model_in)
         bic_run = True
-        beta0 = rh
+        beta0 = sr
         kwargs_pso = [['PSO', {'sigma_scale': sigma_scale, 'n_particles': n_particles, 'n_iterations': n_iterations}]]
         for nmax in n_max_range:
             if nmax < 0:
@@ -158,7 +153,6 @@ class ClsrWorkflow(object):
 
     def _update_kwargs(self,kwargs_result):
         """
-
         :param kwargs_result: fitting results of a specific state
         :return: go back to a specific state
         """
