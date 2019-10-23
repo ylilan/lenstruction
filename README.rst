@@ -6,8 +6,12 @@ lenstruction- cluster lensing source reconstruction package
     :target: http://badge.fury.io/py/cluster_lenstronomy
 .. image:: https://travis-ci.org/ylilan/cluster_lenstronomy.png?branch=master
     :target: https://travis-ci.org/ylilan/cluster_lenstronomy
-``lenstruction``  is a package to perform source reonstruction in cluster strong lensing. For multiply-imaged source, the code correct lens model parameter  locally up to order flexion to improve the source reconstruction.  
+``lenstruction`` is a package to perform source reonstruction in cluster strong lensing. 
+For multiply-imaged source, the code correct lens model parameter  locally up to order flexion to improve the source reconstruction.  
 The software is presented in Yang et al 2019 (in preparation). 
+
+``lenstruction`` is built on software ``lenstronomy`` https://github.com/sibirrer/lenstronom that is presented in
+`Birrer & Amara 2018 <https://arxiv.org/abs/1803.09746v1>`_ and is based on `Birrer et al 2015 <http://adsabs.harvard.edu/abs/2015ApJ...813..102B>`_.
 
 Installation
 ------------
