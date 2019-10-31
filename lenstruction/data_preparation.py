@@ -1,11 +1,11 @@
 from __future__ import print_function
 __author__ = 'lilan yang'
 
+from lenstronomy.Util import kernel_util
 import numpy as np
 from scipy import ndimage
 import matplotlib.pyplot as plt
 from astropy.io import fits
-from lenstronomy.Util import kernel_util
 from astropy.stats import sigma_clipped_stats
 from astropy import wcs
 from photutils import detect_threshold, detect_sources,deblend_sources, source_properties
