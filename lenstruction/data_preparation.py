@@ -214,8 +214,9 @@ class DataPreparation(object):
         :param kernel_size: kernel size of the psf.
         :return: kwargs_psf
         """
-        x_psf, y_psf = self.radec2detector(ra, dec)
-        image_psf = self.cut_image(x_psf, y_psf, r_cut)
+        if ra is not  None:
+            x_psf, y_psf = self.radec2detector(ra, dec)
+            image_psf = self.cut_image(x_psf, y_psf, r_cut)
         if kernel_size is None:
             kernel_size = np.shape(image_psf)[0]
         image_psf_cut = kernel_util.cut_psf(image_psf, psf_size=kernel_size)
@@ -229,7 +230,7 @@ class DataPreparation(object):
 
 
 
-    def params(self, ra, dec, ra_psf, dec_psf, r_cut=100, add_mask=5, multi_band_type='joint-linear',img_name='data',cutout_text='lensed image'):
+    def params(self, ra, dec, ra_psf = None, dec_psf =None, r_cut=100, add_mask=5, multi_band_type='joint-linear',img_name='data',cutout_text='lensed image'):
         """
          image data parameters configuration in lenstronomy keywords arguments
         :param ra:

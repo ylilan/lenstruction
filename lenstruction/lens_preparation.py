@@ -58,7 +58,7 @@ class LensPreparation(object):
 
 
 
-    def params(self,ximg_list, yimg_list, kwargs_data_joint, fixed_index=None,
+    def params(self,ximg_list, yimg_list, kwargs_data_joint,
                                   lens_model_list= ['SHIFT','SHEAR','CONVERGENCE','FLEXIONFG'], diff = 0.03,
                                   kwargs_sigma = None, kwargs_fixed = None, kwargs_lower = None, kwargs_upper = None):
         """
@@ -66,17 +66,11 @@ class LensPreparation(object):
         :param ximg_list: list, x cooridinate of lensed image
         :param yimg_list: list, y cooridinate of lensed image
         :param kwargs_data_joint: list, image data arguments
-        :param fixed_index: int, fixed image index
         :param lens_model_list: string list, name of lens model
         :param diff: float (arcsec), scale of derivation
         :return: lens model keywords arguments
         """
 
-        if fixed_index is not None:
-            img_index = fixed_index
-        else:
-            img_index = 0
-        self.img_index = img_index
         kwagrs_lens_list = []
         kwargs_lens_init = []
         magnification_list = []
@@ -86,32 +80,35 @@ class LensPreparation(object):
              kwagrs_lens_list.append(kwargs_lens)
              kwargs_lens_init += (kwargs_lens)
              magnification_list.append(magnification)
+        magnification_list = np.abs(magnification_list)
+        mag_min_index = np.where(magnification_list == np.min(magnification_list))[0][0]
         kwargs_lens_sigma_tmp = []
         kwargs_fixed_lens_tmp = []
         kwargs_lower_lens_tmp = []
         kwargs_upper_lens_tmp = []
+        fixed_index = mag_min_index
         for i in range(len(ximg_list)):
             for lens_type in lens_model_list:
                 if lens_type == 'SHIFT':
                     kwargs_lens_sigma_tmp.append({'alpha_x':0.03,'alpha_y':0.03})
-                    if i==img_index:
-                        kwargs_fixed_lens_tmp.append(kwagrs_lens_list[img_index][0])
+                    if i==fixed_index:
+                        kwargs_fixed_lens_tmp.append(kwagrs_lens_list[fixed_index][0])
                     else:
                         kwargs_fixed_lens_tmp.append({'alpha_x':kwagrs_lens_list[i][0]['alpha_x'],'alpha_y':kwagrs_lens_list[i][0]['alpha_y']})
                     kwargs_lower_lens_tmp.append({'alpha_x':kwagrs_lens_list[i][0]['alpha_x']-1,'alpha_y':kwagrs_lens_list[i][0]['alpha_y']-1})
                     kwargs_upper_lens_tmp.append({'alpha_x':kwagrs_lens_list[i][0]['alpha_x']+1,'alpha_y':kwagrs_lens_list[i][0]['alpha_y']+1})
                 elif lens_type == 'SHEAR':
                     kwargs_lens_sigma_tmp.append({'e1':0.1,'e2':0.1})
-                    if i==img_index:
-                        kwargs_fixed_lens_tmp.append(kwagrs_lens_list[img_index][1])
+                    if i==fixed_index:
+                        kwargs_fixed_lens_tmp.append(kwagrs_lens_list[fixed_index][1])
                     else:
                         kwargs_fixed_lens_tmp.append({'ra_0': kwagrs_lens_list[i][1]['ra_0'], 'dec_0': kwagrs_lens_list[i][1]['dec_0']})
                     kwargs_lower_lens_tmp.append({'e1':-1,'e2':-1})
                     kwargs_upper_lens_tmp.append({'e1':1,'e2':1})
                 elif lens_type == 'CONVERGENCE':
                     kwargs_lens_sigma_tmp.append({'kappa_ext':0.1})
-                    if i==img_index:
-                        kwargs_fixed_lens_tmp.append(kwagrs_lens_list[img_index][2])
+                    if i==fixed_index:
+                        kwargs_fixed_lens_tmp.append(kwagrs_lens_list[fixed_index][2])
                     else:
                         kwargs_fixed_lens_tmp.append({'ra_0': kwagrs_lens_list[i][2]['ra_0'],'dec_0': kwagrs_lens_list[i][1]['dec_0']})
                     kwargs_lower_lens_tmp.append({'kappa_ext':-0.2}) #
@@ -138,6 +135,7 @@ class LensPreparation(object):
             kwargs_fixed_lens=kwargs_fixed_lens_tmp
         else:
             kwargs_fixed_lens = kwargs_fixed
+        self.fixed_index = fixed_index
         self.lens_model_list = lens_model_list
         self.num_img = len(ximg_list)
         self.magnification_list = magnification_list

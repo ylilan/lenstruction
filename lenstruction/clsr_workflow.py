@@ -126,9 +126,10 @@ class ClsrWorkflow(object):
                 if bic_model >  bic_model_list[-1]:
                     if bic_option:
                         bic_run = False
-                        if bic_model > bic_model_in[-1]:
+                        if bic_model > bic_model_in[bic_in_len-1]:
+                            print ("bic_model_in",bic_model_in)
                             print ("no necessary to add SHAPELETS !")
-                            fix_kwargs_shapelet=[['update_settings', {'source_add_fixed': [[1, ['beta'], [rh]]]}]]
+                            fix_kwargs_shapelet=[['update_settings', {'source_add_fixed': [[1, ['beta'], [sr]]]}]]
                             _, _, _ = self.run_fit_sequence(fix_kwargs_shapelet)
                     elif not bic_option:
                         chain_list_list.append(chain_list)

@@ -48,7 +48,7 @@ class ClsrAnalysis(object):
 
     def plot_modeling(self,kwargs_result,
                       deltaPix_s=0.03,numPix_s=None, text_source='',
-                      text='sys',img_name='sys',font_size=20,):
+                      text='sys',img_name='sys',font_size=20,scale_size=0.1):
         """
         a function to show modeling process containing data, reconstructed image, residual map,
         and reconstructed source.
@@ -82,7 +82,7 @@ class ClsrAnalysis(object):
         if numPix_s is None:
             numPix_s = self.kwargs_data_joint['multi_band_list'][0][0]['image_data'].shape[0]
         f_s, axes_s = plt.subplots(1, 1, figsize=(8, 6))
-        model_plot.source_plot(ax=axes_s, deltaPix_source=deltaPix_s, numPix=numPix_s, band_index=band_index, scale_size=0.5,
+        model_plot.source_plot(ax=axes_s, deltaPix_source=deltaPix_s, numPix=numPix_s, band_index=band_index, scale_size=scale_size,
                                font_size=font_size, text ="Reconstructed source"+text_source)
         f_s.savefig(img_name + 'source' + repr(band_index + 1) + '.pdf')
         f_s.show()
