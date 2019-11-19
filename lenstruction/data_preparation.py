@@ -325,20 +325,20 @@ class DataPreparation(object):
         fig, (ax1, ax2, ax3,ax4) = plt.subplots(1, 4, figsize=(19, 10))
         ax1.imshow(image, origin='lower', cmap="gist_heat")
         ax1.set_title('Cutout Image',fontsize =font_size)
-        ax1.text(image.shape[0] * 0.3, image.shape[0] * 0.05, cutout_text,size=15, color='white',weight="bold")
+        ax1.text(image.shape[0] * 0.2, image.shape[0] * 0.05, cutout_text,size=20, color='white',weight="bold")
         ax1.axis('off')
         segments_deblend_list, xcenter, ycenter, c_index=kwargs_seg
         ax2.imshow(segments_deblend_list, origin='lower')
         for i in range(len(xcenter)):
-            ax2.text(xcenter[i] * 1.1, ycenter[i], 'Seg' + repr(i), color='r',weight="bold")
-        ax2.text(image.shape[0] * 0.3, image.shape[0] * 0.05, 'Seg' + repr(c_index) + ' ' + 'in center',
-                 size=15, color='white',weight="bold")
+            ax2.text(xcenter[i] * 1.1, ycenter[i], 'Seg' + repr(i),  size=20,color='w',weight="bold")
+        ax2.text(image.shape[0] * 0.2, image.shape[0] * 0.9, 'Seg' + repr(c_index) + ' ' + 'in center',
+                 size=20, color='white',weight="bold")
         ax2.set_title('Segmentations',fontsize =font_size)
         ax2.axis('off')
         ax3.imshow(img_mask+mask, origin='lower',cmap="gist_heat")
         ax3.set_title('Selected pixels',fontsize =font_size)
-        ax3.text(image.shape[0] * 0.3, image.shape[0] * 0.05, 'pixels (S/N >' + repr(self.snr) + ')',size=15, color='white',weight="bold")
-        ax3.text(image.shape[0] * 0.3, image.shape[0] * 0.9, 'additional pixels', size=15, color='r',weight="bold")
+        ax3.text(image.shape[0] * 0.1, image.shape[0] * 0.05, 'pixels (S/N >' + repr(self.snr) + ')',size=20, color='white',weight="bold")
+        ax3.text(image.shape[0] * 0.1, image.shape[0] * 0.9, 'additional pixels', size=20, color='r',weight="bold")
         ax3.axis('off')
         ax4.imshow(picked_data, origin='lower',cmap="gist_heat")
         ax4.set_title('Processed Image',fontsize =font_size)
