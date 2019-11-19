@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import numpy as np
 import lenstronomy.Util.util as util
-from lenstronomy.LensModel.numeric_lens_differentials import NumericLens
+from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.Data.imaging_data import ImageData
 from lenstronomy.Cosmo.lens_cosmo import LensCosmo
 
@@ -98,13 +98,13 @@ class LensPreparation(object):
                     kwargs_lower_lens_tmp.append({'alpha_x':kwagrs_lens_list[i][0]['alpha_x']-1,'alpha_y':kwagrs_lens_list[i][0]['alpha_y']-1})
                     kwargs_upper_lens_tmp.append({'alpha_x':kwagrs_lens_list[i][0]['alpha_x']+1,'alpha_y':kwagrs_lens_list[i][0]['alpha_y']+1})
                 elif lens_type == 'SHEAR':
-                    kwargs_lens_sigma_tmp.append({'e1':0.1,'e2':0.1})
+                    kwargs_lens_sigma_tmp.append({'gamma1':0.1,'gamma2':0.1})
                     if i==fixed_index:
                         kwargs_fixed_lens_tmp.append(kwagrs_lens_list[fixed_index][1])
                     else:
                         kwargs_fixed_lens_tmp.append({'ra_0': kwagrs_lens_list[i][1]['ra_0'], 'dec_0': kwagrs_lens_list[i][1]['dec_0']})
-                    kwargs_lower_lens_tmp.append({'e1':-1,'e2':-1})
-                    kwargs_upper_lens_tmp.append({'e1':1,'e2':1})
+                    kwargs_lower_lens_tmp.append({'gamma1':-1,'gamma2':-1})
+                    kwargs_upper_lens_tmp.append({'gamma1':1,'gamma2':1})
                 elif lens_type == 'CONVERGENCE':
                     kwargs_lens_sigma_tmp.append({'kappa_ext':0.1})
                     if i==fixed_index:
@@ -184,7 +184,7 @@ class LensPreparation(object):
             elif lens_type=='SHEAR':
                 gamma1 = self.gamma1[x,y]
                 gamma2 = self.gamma2[x,y]
-                kwargs_lens.append({'e1': gamma1, 'e2': gamma2, 'ra_0': ra_center, 'dec_0': dec_center})
+                kwargs_lens.append({'gamma1': gamma1, 'gamma2': gamma2, 'ra_0': ra_center, 'dec_0': dec_center})
             elif lens_type =='CONVERGENCE':
                 kappa = self.kappa[x,y]
                 kwargs_lens.append({'kappa_ext': kappa, 'ra_0': ra_center, 'dec_0': dec_center})
@@ -220,22 +220,22 @@ class LensPreparation(object):
             elif lens_type=='SHIFT':
                 kwargs_lens.append({'alpha_x': ra_center , 'alpha_y': dec_center })
             elif lens_type == 'SHEAR':
-                gamma1, gamma2 = NumericLens(['INTERPOL']).gamma(util.image2array(xaxes),
+                gamma1, gamma2 = LensModel(['INTERPOL']).gamma(util.image2array(xaxes),
                                                                  util.image2array(yaxes), kwargs=kwargs_lens_in,diff = diff)
                 gamma_1_center, gamma_2_center = gamma1.mean(), gamma2.mean()
-                kwargs_lens.append({'e1': gamma_1_center, 'e2': gamma_2_center, 'ra_0': ra_center, 'dec_0': dec_center})
+                kwargs_lens.append({'gamma1': gamma_1_center, 'gamma2': gamma_2_center, 'ra_0': ra_center, 'dec_0': dec_center})
             elif lens_type == 'CONVERGENCE':
-                kappa = NumericLens(['INTERPOL']).kappa(util.image2array(xaxes),
+                kappa = LensModel(['INTERPOL']).kappa(util.image2array(xaxes),
                                                         util.image2array(yaxes), kwargs=kwargs_lens_in, diff = diff)
                 kappa_center = kappa.mean()
                 kwargs_lens.append({'kappa_ext': kappa_center, 'ra_0': ra_center, 'dec_0': dec_center})
             elif lens_type == 'FLEXION':
-                g1, g2, g3, g4 = NumericLens(['INTERPOL']).flexion(util.image2array(xaxes),
+                g1, g2, g3, g4 = LensModel(['INTERPOL']).flexion(util.image2array(xaxes),
                                                                    util.image2array(yaxes), kwargs=kwargs_lens_in, diff = diff)
                 g1_c, g2_c, g3_c, g4_c = g1.mean(), g2.mean(), g3.mean(), g4.mean()
                 kwargs_lens.append({'g1': g1_c,'g2':g2_c,'g3':g3_c,'g4':g4_c, 'ra_0': ra_center, 'dec_0': dec_center})
             elif lens_type == 'FLEXIONFG':
-                g1, g2, g3, g4 = NumericLens(['INTERPOL']).flexion(util.image2array(xaxes),
+                g1, g2, g3, g4 = LensModel(['INTERPOL']).flexion(util.image2array(xaxes),
                                                                    util.image2array(yaxes), kwargs=kwargs_lens_in, diff = diff)
                 g1_c, g2_c, g3_c, g4_c = g1.mean(), g2.mean(), g3.mean(), g4.mean()
                 F1_c = (g1_c + g3_c) * 0.5
@@ -244,7 +244,7 @@ class LensPreparation(object):
                 G2_c = (g2_c - g4_c) * 0.5 - g4_c
                 kwargs_lens.append({'F1': F1_c, 'F2': F2_c, 'G1': G1_c, 'G2': G2_c, 'ra_0': ra_center, 'dec_0': dec_center})
 
-        magnification = NumericLens(['INTERPOL']).magnification(util.image2array(xaxes),
+        magnification = LensModel(['INTERPOL']).magnification(util.image2array(xaxes),
                                                                   util.image2array(yaxes), kwargs=kwargs_lens_in, diff = diff)
         #TODO check NumericLens()
         magnification = np.mean(magnification)
