@@ -1,6 +1,7 @@
 from __future__ import print_function
-from lenstronomy.Plots.output_plots import ModelPlot
-import lenstronomy.Plots.output_plots as out_plot
+from lenstronomy.Plots.model_plot import ModelPlot
+from lenstronomy.Plots.chain_plot import plot_chain_list
+
 import matplotlib.pyplot as plt
 import numpy as np
 import corner
@@ -18,7 +19,7 @@ def plot_chain(chain_list):
     :return:plot
     """
     for i in range(len(chain_list)):
-        f, axes = out_plot.plot_chain_list(chain_list, index=i)
+        f, axes = plot_chain_list(chain_list, index=i)
     f.show()
 
 def plot_mcmc(chain_list_mcmc):
