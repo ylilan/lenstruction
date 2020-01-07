@@ -1,18 +1,8 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Mar  5 11:45:45 2018
-
-@author: Dartoon
-
-The scripts for cut out the PSF candidate.
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def sub_bkg(img, plot=True):
+def sub_bkg(img, plot=False):
     from astropy.stats import SigmaClip
     from photutils import Background2D, SExtractorBackground
     sigma_clip = SigmaClip(sigma=3., iters=10)
