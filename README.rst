@@ -37,6 +37,8 @@ Modelling Features
 
 Example notebooks
 ------------
+The examples are available at `https://github.com/ylilan/lenstruction_extensions.git<https://github.com/ylilan/lenstruction_extensions.git>`_.
+
 
 Attribution
 ------------
