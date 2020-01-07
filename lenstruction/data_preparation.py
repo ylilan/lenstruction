@@ -11,6 +11,7 @@ from astropy import wcs
 from photutils import detect_threshold, detect_sources,deblend_sources, source_properties
 from photutils.datasets import make_noise_image
 from six.moves import input
+from ddcut_image import sub_bkg
 
 
 
@@ -67,6 +68,18 @@ class DataPreparation(object):
         return x_detector, y_detector
 
     def cut_image(self, x, y, r_cut):
+        """
+         Function used to cut input image.
+         :param x: int, x coordinate in pixel unit
+         :param y: int, y coordinate in pixel unit
+         :param r_cut: int format value, radius of cut out image
+         :return: cutted image
+         """
+        image_cutted = self.image[x - r_cut:x + r_cut + 1, y - r_cut:y + r_cut + 1]
+        image_cutted, _ = sub_bkg(image_cutted)
+        return image_cutted
+
+    def cut_image_psf(self, x, y, r_cut):
         """
          Function used to cut input image.
          :param x: int, x coordinate in pixel unit
@@ -170,7 +183,7 @@ class DataPreparation(object):
        self.raw_image = image
        if self.interaction:
             self.plot_segmentation(image, segments_deblend_list, xcenter, ycenter, c_index)
-            source_mask_index = [int(number) for number in input('Selection of data via segmentation index separated by space, e.g., 0 1 ').split()]
+            source_mask_index = [int(number) for number in input('Selection of data via segmentation index separated by space, e.g., 0 1 :').split()]
             src_mask = np.zeros_like(image)
             for i in source_mask_index:
                 src_mask = src_mask + obj_masks[i]
@@ -216,7 +229,7 @@ class DataPreparation(object):
         """
         if ra is not  None:
             x_psf, y_psf = self.radec2detector(ra, dec)
-            image_psf = self.cut_image(x_psf, y_psf, r_cut)
+            image_psf = self.cut_image_psf(x_psf, y_psf, r_cut)
         if kernel_size is None:
             kernel_size = np.shape(image_psf)[0]
         image_psf_cut = kernel_util.cut_psf(image_psf, psf_size=kernel_size)
@@ -293,14 +306,14 @@ class DataPreparation(object):
         :param c_index:
         :return:
         """
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 6))
-        ax1.imshow(image_data, origin='lower',cmap="gist_heat")
-        ax1.set_title('Input Image',fontsize =font_size )
-        ax2.imshow(segments_deblend, origin='lower')
+        fig, ax1 = plt.subplots(1, 1)
+        #ax1.imshow(image_data, origin='lower',cmap="gist_heat")
+        #ax1.set_title('Input Image',fontsize =font_size )
+        ax1.imshow(segments_deblend, origin='lower')
         for i in range(len(xcenter)):
-            ax2.text(xcenter[i]*1.1, ycenter[i], 'Seg'+repr(i), color='w')
-        ax2.text(image_data.shape[0]*0.5,image_data.shape[0]*0.1,'Seg '+repr(c_index)+' '+'in center',size=12,color='white')
-        ax2.set_title('Segmentations (S/N >'+repr(self.snr)+')',fontsize =font_size)
+            ax1.text(xcenter[i], ycenter[i], 'Seg'+repr(i), color='w',size = 12)
+        ax1.text(image_data.shape[0]*0.5,image_data.shape[0]*0.1,'Seg '+repr(c_index)+' '+'in center',size=12,color='white')
+        ax1.set_title('Segmentations (S/N >'+repr(self.snr)+')',fontsize =font_size)
         plt.show()
         return 0
 
@@ -346,4 +359,5 @@ class DataPreparation(object):
         plt.show()
         fig.savefig(img_name)
         return 0
+
 
