@@ -1,1 +1,1 @@
-You are in bacheloar branch, a developing branch.
+This is the bacheloar branch, a developing branch.
