@@ -48,7 +48,7 @@ class ClsrAnalysis(object):
 
 
     def plot_modeling(self,kwargs_result,
-                      deltaPix_s=0.03,numPix_s=None, text_source='',
+                      deltaPix_s=0.03,numPix_s=None, text_source='', data_index = 0,
                       text='sys',img_name='sys',font_size=25,scale_size=0.1):
         """
         a function to show modeling process containing data, reconstructed image, residual map,
@@ -66,28 +66,33 @@ class ClsrAnalysis(object):
         model_plot = ModelPlot(self.multi_band_list, self.kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat",
                  multi_band_type=self.multi_band_type)
         num_bands = len(self.kwargs_data_joint['multi_band_list'])
-        f, axes = plt.subplots(num_bands, 3, figsize=(28, 10))
+        if num_bands >1:
+            f, axes = plt.subplots(num_bands, 3, figsize=(22, 18))
+        else:
+            f, axes = plt.subplots(num_bands, 3, figsize=(22, 6))
         for band_index in range(num_bands):
             if num_bands >1:
                 ax1 = axes[band_index, 0]
                 ax2 = axes[band_index, 1]
                 ax3 = axes[band_index, 2]
+                img_index = band_index
             else:
                 ax1 = axes[0]
                 ax2 = axes[1]
                 ax3 = axes[2]
-            model_plot.data_plot(ax=ax1, band_index=band_index, text='Observed'+text+ repr(band_index+1),font_size = font_size)
-            model_plot.model_plot(ax=ax2, image_names=True, band_index=band_index,font_size = font_size, text='Modeled'+text+ repr(band_index+1))
+                img_index = data_index
+            model_plot.data_plot(ax=ax1, band_index=band_index, text='Observed'+text+ repr(img_index+1),font_size = font_size)
+            model_plot.model_plot(ax=ax2, image_names=True, band_index=band_index,font_size = font_size, text='Modeled'+text+ repr(img_index+1))
             model_plot.normalized_residual_plot(ax=ax3, v_min=-6, v_max=6, band_index=band_index,font_size = font_size)
         f.savefig(img_name+'residual.pdf', bbox_inches='tight')
         if numPix_s is None:
             numPix_s = self.kwargs_data_joint['multi_band_list'][0][0]['image_data'].shape[0]
-        f_s, axes_s = plt.subplots(1, 2, figsize=(18, 8))
-        model_plot.source_plot(ax=axes_s[0], deltaPix_source=deltaPix_s, numPix=numPix_s, band_index=band_index, scale_size=scale_size,
-                               font_size=font_size, text ="Reconstructed source"+text_source,  plot_scale='log', v_min =-3,
+        f_s, axes_s = plt.subplots(1, 1, figsize=(9, 6) )
+        model_plot.source_plot(ax=axes_s, deltaPix_source=deltaPix_s, numPix=numPix_s, band_index=band_index, scale_size=scale_size,
+                               font_size=font_size, text ="Source"+text_source,  plot_scale='log', v_min =-3,
                                with_caustics=True)
-        model_plot.error_map_source_plot(ax = axes_s[1],deltaPix_source=deltaPix_s, numPix=numPix_s, font_size=font_size)
-        f_s.savefig(img_name +'source'+repr(band_index + 1)+'.pdf')
+        #model_plot.error_map_source_plot(ax = axes_s[1],deltaPix_source=deltaPix_s, numPix=numPix_s, font_size=font_size)
+        f_s.savefig(img_name +'source.pdf')
         f_s.show()
 
 

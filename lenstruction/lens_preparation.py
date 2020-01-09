@@ -5,6 +5,7 @@ import lenstronomy.Util.util as util
 from lenstronomy.LensModel.lens_model import LensModel
 from lenstronomy.Data.imaging_data import ImageData
 from lenstronomy.Cosmo.lens_cosmo import LensCosmo
+from astropy import wcs
 
 
 class LensPreparation(object):
@@ -15,7 +16,7 @@ class LensPreparation(object):
     Or, you know, shear, convergency, shift, then you wanna know deflection maps.
 
     """
-    def __init__(self, zl, zs, xdeflection=None,ydeflection=None, gamma1=None,gamma2=None, kappa=None):
+    def __init__(self, zl, zs, xdeflection=None,ydeflection=None, gamma1=None,gamma2=None, kappa=None, hdul = None):
        """
 
        input the initial lens model.
@@ -30,6 +31,7 @@ class LensPreparation(object):
        cosmo = LensCosmo(zl, zs)
        dlsds = cosmo.D_ds / cosmo.D_s
        self.dlsds = dlsds
+       self.wcs = wcs.WCS(hdul[0].header)
        #alphax
        if xdeflection is None:
            self.alphax = None
@@ -58,9 +60,11 @@ class LensPreparation(object):
 
 
 
-    def params(self,ximg_list, yimg_list, kwargs_data_joint,
-                                  lens_model_list= ['SHIFT','SHEAR','CONVERGENCE','FLEXIONFG'], diff = 0.03,
-                                  kwargs_sigma = None, kwargs_fixed = None, kwargs_lower = None, kwargs_upper = None):
+
+    def params(self,ximg_list, yimg_list, ra_list, dec_list,
+               kwargs_data_joint,
+               lens_model_list= ['SHIFT','SHEAR','CONVERGENCE','FLEXIONFG'], diff = 0.03,
+               kwargs_sigma = None, kwargs_fixed = None, kwargs_lower = None, kwargs_upper = None):
         """
         lens model parameters configuration in lenstronomy keywords arguments
         :param ximg_list: list, x cooridinate of lensed image
@@ -76,7 +80,7 @@ class LensPreparation(object):
         magnification_list = []
         for i in range(len(ximg_list)):
              kwargs_data = kwargs_data_joint['multi_band_list'][i][0]
-             kwargs_lens, magnification = self.lens_param_initial(x= ximg_list[i], y = yimg_list[i], kwargs_data =kwargs_data, lens_model_list=lens_model_list, diff=diff)
+             kwargs_lens, magnification = self.lens_param_initial(x= ximg_list[i], y = yimg_list[i], ra =ra_list[i] , dec= dec_list[i],  kwargs_data =kwargs_data, lens_model_list=lens_model_list, diff=diff)
              kwagrs_lens_list.append(kwargs_lens)
              kwargs_lens_init += (kwargs_lens)
              magnification_list.append(magnification)
@@ -144,7 +148,7 @@ class LensPreparation(object):
 
 
 
-    def lens_param_initial(self, x, y, kwargs_data, lens_model_list, diff):
+    def lens_param_initial(self, x, y,ra, dec, kwargs_data, lens_model_list, diff):
         """
         Initial lens parameters, deduced from deflection maps or read directly
         :param x: x coordinate of lensed image
@@ -158,16 +162,16 @@ class LensPreparation(object):
         if self.alphax is not None and self.alphay is not None:
             kwargs_lens,magnification  = self._cal_kwargs_lens(x=x, y=y, kwargs_data=kwargs_data, diff=diff, lens_model_list=lens_model_list)
         else:
-            kwargs_lens, magnification = self._read_kwargs_lens(x=x, y=y, kwargs_data=kwargs_data, lens_model_list=lens_model_list)
+            kwargs_lens, magnification = self._read_kwargs_lens(ra=ra, dec=dec, kwargs_data=kwargs_data, lens_model_list=lens_model_list)
         return kwargs_lens, magnification
 
 
 
-    def _read_kwargs_lens(self,x,y, kwargs_data,lens_model_list=['SHIFT','SHEAR','CONVERGENCE','FLEXIONFG']):
+    def _read_kwargs_lens(self,ra,dec, kwargs_data,lens_model_list=['SHIFT','SHEAR','CONVERGENCE','FLEXIONFG']):
         """
         Initial lens parameters, read from shear, convergence
-        :param x: x coordinate of lensed image
-        :param y: y coordinate of lensed image
+        :param ra: x coordinate of lensed image
+        :param dec: y coordinate of lensed image
         :param kwargs_data: arguments of image data
         :param lens_model_list: list of choices of lens model
         :return: list of lens parameters
@@ -182,11 +186,13 @@ class LensPreparation(object):
             if lens_type == 'SHIFT':
                 kwargs_lens.append({'alpha_x': ra_center, 'alpha_y': dec_center})
             elif lens_type=='SHEAR':
-                gamma1 = self.gamma1[x,y]
-                gamma2 = self.gamma2[x,y]
+                xgamma, ygamma = self.radec2detector(ra, dec)
+                gamma1 = self.gamma1[xgamma, ygamma]
+                gamma2 = self.gamma2[xgamma, ygamma]
                 kwargs_lens.append({'gamma1': gamma1, 'gamma2': gamma2, 'ra_0': ra_center, 'dec_0': dec_center})
             elif lens_type =='CONVERGENCE':
-                kappa = self.kappa[x,y]
+                xkappa, ykappa = self.radec2detector(ra, dec)
+                kappa = self.kappa[ xkappa, ykappa]
                 kwargs_lens.append({'kappa_ext': kappa, 'ra_0': ra_center, 'dec_0': dec_center})
             elif lens_type == 'FLEXIONFG':
                 kwargs_lens.append(
@@ -196,6 +202,7 @@ class LensPreparation(object):
 
     def _cal_kwargs_lens(self,x, y, kwargs_data, lens_model_list, diff):
         """
+        #TODO: require same pixel size
         Initial lens parameters, deduced from deflection maps.
         :param x: x coordinate of lensed image
         :param y: y coordinate of lensed image
@@ -246,7 +253,6 @@ class LensPreparation(object):
 
         magnification = LensModel(['INTERPOL']).magnification(util.image2array(xaxes),
                                                                   util.image2array(yaxes), kwargs=kwargs_lens_in, diff = diff)
-        #TODO check NumericLens()
         magnification = np.mean(magnification)
         return kwargs_lens, magnification
 
@@ -275,3 +281,26 @@ class LensPreparation(object):
 
 
 
+    def match_pixelsize(self):
+
+        """
+        match the pixel size of data and lens map
+        :return:
+        """
+        return 0
+
+
+
+
+    def radec2detector(self,ra,dec):
+        """
+        WCS transformation from world to pixel coordinates
+        :param ra: ra in deg
+        :param dec: dec in deg
+        :return:
+        """
+
+        y_detector= np.int(self.wcs.wcs_world2pix([[ra, dec]], 1)[0][0])
+        x_detector = (np.int(self.wcs.wcs_world2pix([[ra, dec]], 1)[0][1]))
+
+        return x_detector, y_detector

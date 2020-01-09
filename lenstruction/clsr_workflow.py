@@ -110,21 +110,15 @@ class ClsrWorkflow(object):
                 raise ValueError("nmax can not be negative!",nmax)
             else:
                 if nmax == n_max_range[0]:
-                    #start_kwargs_shapelet = [['update_settings', {'source_remove_fixed': [  [1, ['beta'], [beta0]] ]}]]
-                    start_kwargs_shapelet = [['update_settings', {'source_remove_fixed': [[0, ['beta'], [beta0]]]}]]
+                    start_kwargs_shapelet = [['update_settings', {'source_remove_fixed': [  [1, ['beta'], [beta0]] ]}]]
                 else:
                     start_kwargs_shapelet = []
                 beta_nmax = ((nmax + 1)) ** 0.5 * beta0
-                #fit_kwargs_shapelet = [['update_settings',
-                #                        {'source_add_fixed': [[1, ['n_max'], [nmax]]],
-                #                        'change_source_lower_limit': [[1, ['beta'], [beta_nmax]]]
-                #                         }
-                #                         ]]
                 fit_kwargs_shapelet = [['update_settings',
-                                        {'source_add_fixed': [[0, ['n_max'], [nmax]]],
-                                         'change_source_lower_limit': [[0, ['beta'], [beta_nmax]]]
+                                        {'source_add_fixed': [[1, ['n_max'], [nmax]]],
+                                        'change_source_lower_limit': [[1, ['beta'], [beta_nmax]]]
                                          }
-                                        ]]
+                                         ]]
                 fitting_kwargs = start_kwargs_shapelet + fit_kwargs_shapelet + kwargs_pso
             if bic_run:
                 print ("nmax",nmax,"fitting_kwargs",fitting_kwargs)
