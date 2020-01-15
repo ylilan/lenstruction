@@ -229,12 +229,14 @@ class LensPreparation(object):
             elif lens_type == 'SHEAR':
                 gamma1, gamma2 = LensModel(['INTERPOL']).gamma(util.image2array(xaxes),
                                                                  util.image2array(yaxes), kwargs=kwargs_lens_in,diff = diff)
-                gamma_1_center, gamma_2_center = gamma1.mean(), gamma2.mean()
+                #gamma_1_center, gamma_2_center = gamma1.mean(), gamma2.mean()
+                gamma_1_center, gamma_2_center = util.array2image(gamma1)[int(r_cut + 1), int(r_cut + 1)], util.array2image(gamma2)[int(r_cut + 1), int(r_cut + 1)]
                 kwargs_lens.append({'gamma1': gamma_1_center, 'gamma2': gamma_2_center, 'ra_0': ra_center, 'dec_0': dec_center})
             elif lens_type == 'CONVERGENCE':
                 kappa = LensModel(['INTERPOL']).kappa(util.image2array(xaxes),
                                                         util.image2array(yaxes), kwargs=kwargs_lens_in, diff = diff)
-                kappa_center = kappa.mean()
+                #kappa_center = kappa.mean()
+                kappa_center = util.array2image(kappa)[int(r_cut + 1), int(r_cut + 1)]
                 kwargs_lens.append({'kappa_ext': kappa_center, 'ra_0': ra_center, 'dec_0': dec_center})
             elif lens_type == 'FLEXION':
                 g1, g2, g3, g4 = LensModel(['INTERPOL']).flexion(util.image2array(xaxes),
@@ -253,7 +255,8 @@ class LensPreparation(object):
 
         magnification = LensModel(['INTERPOL']).magnification(util.image2array(xaxes),
                                                                   util.image2array(yaxes), kwargs=kwargs_lens_in, diff = diff)
-        magnification = np.mean(magnification)
+        magnification = util.array2image(magnification)[int(r_cut + 1), int(r_cut + 1)]
+
         return kwargs_lens, magnification
 
 
