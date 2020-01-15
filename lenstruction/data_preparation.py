@@ -6,14 +6,11 @@ import numpy as np
 from scipy import ndimage
 import matplotlib.pyplot as plt
 from astropy.io import fits
-from astropy.stats import sigma_clipped_stats
+from astropy.stats import sigma_clipped_stats,SigmaClip
 from astropy import wcs
-from photutils import detect_threshold, detect_sources,deblend_sources, source_properties
+from photutils import detect_threshold, detect_sources,deblend_sources, source_properties, Background2D, SExtractorBackground,make_source_mask
 from photutils.datasets import make_noise_image
 from six.moves import input
-from ddcut_image import sub_bkg
-
-
 
 class DataPreparation(object):
     """
@@ -67,6 +64,19 @@ class DataPreparation(object):
 
         return x_detector, y_detector
 
+
+
+    def sub_bkg(self,img):
+        sigma_clip = SigmaClip(sigma=3., iters=10)
+        bkg_estimator = SExtractorBackground()
+        mask_0 = make_source_mask(img, snr=3, npixels=5, dilate_size=11)
+        mask_1 = (np.isnan(img))
+        mask = mask_0 + mask_1
+        bkg = Background2D(img, (10, 10), filter_size=(3, 3), sigma_clip=sigma_clip,
+                           bkg_estimator=bkg_estimator, mask=mask)
+        back = bkg.background * ~mask_1
+        return img - back
+
     def cut_image(self, x, y, r_cut):
         """
          Function used to cut input image.
@@ -75,8 +85,8 @@ class DataPreparation(object):
          :param r_cut: int format value, radius of cut out image
          :return: cutted image
          """
-        image_cutted = self.image[x - r_cut:x + r_cut + 1, y - r_cut:y + r_cut + 1]
-        image_cutted, _ = sub_bkg(image_cutted)
+        image_cutted_raw = self.image[x - r_cut:x + r_cut + 1, y - r_cut:y + r_cut + 1]
+        image_cutted = self.sub_bkg(image_cutted_raw)
         return image_cutted
 
     def cut_image_psf(self, x, y, r_cut):
@@ -152,6 +162,7 @@ class DataPreparation(object):
             fig_ci=plt.figure()
             plt.imshow(m_image, origin='lower',cmap="gist_heat")
             plt.title('Good frame size? ('+repr(cutsize_data*2+1)+'x'+repr(cutsize_data*2+1)+' pixels^2' + ')',fontsize=font_size)
+            plt.colorbar()
             plt.show(fig_ci)
             cutyn = input('Hint: appropriate frame size? (y/n): ')
             if cutyn == 'n':
