@@ -35,7 +35,7 @@ class SourcePreparation(object):
                 kwargs_init_tmp.append({'R_sersic': re, 'center_x': betax, 'center_y': betay,
                                            'e1': 0., 'e2': 0., 'n_sersic': 2})
                 kwargs_sigma_tmp.append({'R_sersic': re, 'n_sersic': 1, 'e1': 0.1, 'e2': 0.1, 'center_x': re, 'center_y': re})
-                kwargs_lower_tmp.append({'R_sersic': 0, 'n_sersic': 0.1, 'e1': -1, 'e2': -1, 'center_x': betax - 1,'center_y': betay - 1})
+                kwargs_lower_tmp.append({'R_sersic': 0, 'n_sersic': 0.5, 'e1': -1, 'e2': -1, 'center_x': betax - 1,'center_y': betay - 1})
                 kwargs_upper_tmp.append({'R_sersic': 100, 'n_sersic': 8, 'e1': 1, 'e2': 1,   'center_x': betax + 1, 'center_y': betay + 1})
                 kwargs_fixed_tmp.append({})
             elif source_type == 'SHAPELETS':

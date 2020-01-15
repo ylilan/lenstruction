@@ -162,7 +162,6 @@ class DataPreparation(object):
             fig_ci=plt.figure()
             plt.imshow(m_image, origin='lower',cmap="gist_heat")
             plt.title('Good frame size? ('+repr(cutsize_data*2+1)+'x'+repr(cutsize_data*2+1)+' pixels^2' + ')',fontsize=font_size)
-            plt.colorbar()
             plt.show(fig_ci)
             cutyn = input('Hint: appropriate frame size? (y/n): ')
             if cutyn == 'n':
@@ -285,7 +284,10 @@ class DataPreparation(object):
             y_detector.append(xy[1])
             multi_band_list.append([kwargs_data, kwargs_psf, kwargs_numerics])
             print("======lensed image " + repr(i + 1) + ", assembled image======")
-            self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name+repr(i+1)+'.pdf',cutout_text=cutout_text+repr(i+1))
+            if len(ra) > 1:
+                self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name+repr(i+1)+'.pdf',cutout_text=cutout_text+repr(i+1))
+            else:
+                self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name + '.pdf', cutout_text=cutout_text + repr(i + 1))
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': multi_band_type}
         return x_detector,y_detector,kwargs_data_joint
 
