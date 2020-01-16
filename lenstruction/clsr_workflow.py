@@ -4,7 +4,7 @@ import numpy as np
 
 
 class ClsrWorkflow(object):
-    def __init__(self, kwargs_data_joint, kwargs_model,lens_params,source_params, kwargs_constraints, kwargs_likelihood=None):
+    def __init__(self, kwargs_data_joint, kwargs_model,lens_params,source_params, kwargs_constraints=None, kwargs_likelihood=None):
         """
         class to  manage cluster source reconstruction.
         This class inherited the FittingSequence class in Workflow module of lenstronomy.
