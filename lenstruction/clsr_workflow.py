@@ -37,7 +37,7 @@ class ClsrWorkflow(object):
         return bic_model,chain_list, kwargs_result
 
 
-    def lensmodel_comp(self, num_img, fixed_index, n_particles,n_iterations,sigma_scale, num_lens_model,flexion_option=True):
+    def lensmodel_comp(self, num_img, n_particles,n_iterations,sigma_scale, num_lens_model,fixed_index =0,flexion_option=True):
         """
         function to figure out the necessary of increasing lens model complexity. Currently, we only consider up to flexion term.
         :param n_particles: particles numbers of PSO
