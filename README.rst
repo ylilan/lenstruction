@@ -31,7 +31,7 @@ Requirements
 ------------
 make sure you have already installed lenstronomy (>version 0.9.2), if not, please instal lenstronomy first.    
 
-$ pip install lenstronomy --user
+$ pip install lenstronomy==1.2.0 --user
 
 Modelling Features
 ------------
