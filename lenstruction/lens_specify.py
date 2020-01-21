@@ -8,7 +8,7 @@ from lenstronomy.Cosmo.lens_cosmo import LensCosmo
 from astropy import wcs
 
 
-class LensPreparation(object):
+class LensSpecify(object):
     """
     This class is used to do initialize kwargs of the lens models according to the given lens_model_list.
     (It's easy and free to choose lens_model_list, but a little tricky to generate corresponding kwargs.)

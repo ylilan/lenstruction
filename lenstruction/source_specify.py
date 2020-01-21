@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-class SourcePreparation(object):
+class SourceSpecify(object):
     """
      This class is used to do initialize kwargs of the source light models,
      the default light models are sersic and shapelets, ['SERSIC_ELLIPSE','SHAPELETS'].

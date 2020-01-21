@@ -14,7 +14,7 @@ from six.moves import input
 
 
 
-class DataProsess(object):
+class DataProcess(object):
     """
     The class contains useful fuctions to do, e.g. cut image, calculate cutsize, make mask of images.....
     """
