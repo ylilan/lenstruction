@@ -22,7 +22,7 @@ def plot_chain(chain_list):
         f, axes = plot_chain_list(chain_list, index=i)
     f.show()
 
-def plot_mcmc(chain_list_mcmc):
+def plot_mcmc(chain_list_mcmc, labels=None,smooth=0.5):
     """
     a fuction to plot chain_list and contour figure of mcmc results
     :param chain_list_mcmc: chain_list of mcmc results
@@ -32,9 +32,15 @@ def plot_mcmc(chain_list_mcmc):
     print("number of non-linear parameters in the MCMC process: ", len(param_mcmc))
     print("parameters in order: ", param_mcmc)
     print("number of evaluations in the MCMC process: ", np.shape(samples_mcmc)[0])
+    if labels is None:
+        labels = param_mcmc
     if not samples_mcmc == []:
-        fig=corner.corner(samples_mcmc, labels=param_mcmc, show_titles=True)
+        fig=corner.corner(samples_mcmc, labels=labels,smooth=smooth, show_titles=True, max_n_ticks=3,label_kwargs={"fontsize": 25},
+        title_kwargs = {"fontsize": 0}, quantiles=[0.16, 0.5, 0.84])
+        for ax in fig.get_axes():
+            ax.tick_params(axis='both', labelsize=12)
     fig.show()
+    fig.savefig('mcmc.pdf')
 
 class ClsrAnalysis(object):
     """
