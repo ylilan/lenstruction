@@ -12,7 +12,7 @@ from photutils import detect_threshold, detect_sources,deblend_sources, source_p
 from photutils.datasets import make_noise_image
 from six.moves import input
 
-class DataPreparation(object):
+class DataProcess(object):
     """
     The class contains useful fuctions to do, e.g. cut image, calculate cutsize, make mask of images.....
     """
@@ -160,7 +160,7 @@ class DataPreparation(object):
          while(yn):
             m_image = self.cut_image(x, y, r_cut)
             fig_ci=plt.figure()
-            plt.imshow(m_image, origin='lower',cmap="gist_heat")
+            plt.imshow(np.log10(m_image), origin='lower',cmap="gist_heat")
             plt.title('Good frame size? ('+repr(cutsize_data*2+1)+'x'+repr(cutsize_data*2+1)+' pixels^2' + ')',fontsize=font_size)
             plt.show(fig_ci)
             cutyn = input('Hint: appropriate frame size? (y/n): ')
