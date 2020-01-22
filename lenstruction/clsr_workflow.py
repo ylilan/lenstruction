@@ -57,13 +57,19 @@ class ClsrWorkflow(object):
             else:
                 lens_flexion_index = (i + 1) * num_lens_model - 1
                 lens_remove_fixed_list.append([lens_flexion_index, ['G1', 'G2', 'F1', 'F2'], [0, 0, 0, 0]])
-                lens_add_fixed_list.append([lens_flexion_index, ['G1', 'G2', 'F1', 'F2'], [0, 0, 0, 0]])
+                G1_fix = self.kwargs_params['lens_model'][2][lens_flexion_index]['G1']
+                G2_fix = self.kwargs_params['lens_model'][2][lens_flexion_index]['G2']
+                F1_fix = self.kwargs_params['lens_model'][2][lens_flexion_index]['F1']
+                F2_fix = self.kwargs_params['lens_model'][2][lens_flexion_index]['F2']
+                lens_add_fixed_list.append([lens_flexion_index, ['G1', 'G2', 'F1', 'F2'], [G1_fix, G2_fix, F1_fix, F2_fix]])
         flexion_add_fixed = [['update_settings', {'lens_add_fixed': lens_add_fixed_list}]]
+        print("flexion_fixed:", flexion_add_fixed)
         kwargs_pso = [['PSO', {'sigma_scale': sigma_scale, 'n_particles': n_particles, 'n_iterations': n_iterations}]]
         fitting_kwargs_fix =  flexion_add_fixed+ kwargs_pso
         bic_model_fix, chain_list_fix, kwargs_result_fix = self.run_fit_sequence(fitting_kwargs_fix)
         if flexion_option:
             flexion_remove_fixed = [['update_settings', {'lens_remove_fixed': lens_remove_fixed_list}]]
+            print ("flexion_remove_fixed:", flexion_remove_fixed)
             fitting_kwargs_free = flexion_remove_fixed + kwargs_pso
             bic_model_free, chain_list_free, kwargs_result_free = self.run_fit_sequence(fitting_kwargs_free)
         else:
