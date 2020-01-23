@@ -43,7 +43,8 @@ The examples are available at https://github.com/ylilan/lenstruction_notebooks .
 
 Attribution
 ------------
-If you make use of ``lenstruction``, please cite  `_Yang et al. 2020 <https://arxiv.org/abs/2001.07719>_` ,
+If you make use of ``lenstruction``, please cite 
+`Yang et al 2020 <https://arxiv.org/abs/2001.07719>`_,
 `Birrer & Amara 2018 <https://arxiv.org/abs/1803.09746v1>`_, and `Birrer et al 2015 <http://adsabs.harvard.edu/abs/2015ApJ...813..102B>`_
 
 More  
