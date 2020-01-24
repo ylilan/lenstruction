@@ -6,13 +6,11 @@ import numpy as np
 from scipy import ndimage
 import matplotlib.pyplot as plt
 from astropy.io import fits
-from astropy.stats import sigma_clipped_stats
+from astropy.stats import sigma_clipped_stats,SigmaClip
 from astropy import wcs
-from photutils import detect_threshold, detect_sources,deblend_sources, source_properties
+from photutils import detect_threshold, detect_sources,deblend_sources, source_properties, Background2D, SExtractorBackground,make_source_mask
 from photutils.datasets import make_noise_image
 from six.moves import input
-
-
 
 class DataProcess(object):
     """
@@ -66,7 +64,32 @@ class DataProcess(object):
 
         return x_detector, y_detector
 
+
+
+    def sub_bkg(self,img):
+        sigma_clip = SigmaClip(sigma=3., iters=10)
+        bkg_estimator = SExtractorBackground()
+        mask_0 = make_source_mask(img, snr=3, npixels=5, dilate_size=11)
+        mask_1 = (np.isnan(img))
+        mask = mask_0 + mask_1
+        bkg = Background2D(img, (10, 10), filter_size=(3, 3), sigma_clip=sigma_clip,
+                           bkg_estimator=bkg_estimator, mask=mask)
+        back = bkg.background * ~mask_1
+        return img - back
+
     def cut_image(self, x, y, r_cut):
+        """
+         Function used to cut input image.
+         :param x: int, x coordinate in pixel unit
+         :param y: int, y coordinate in pixel unit
+         :param r_cut: int format value, radius of cut out image
+         :return: cutted image
+         """
+        image_cutted_raw = self.image[x - r_cut:x + r_cut + 1, y - r_cut:y + r_cut + 1]
+        image_cutted = self.sub_bkg(image_cutted_raw)
+        return image_cutted
+
+    def cut_image_psf(self, x, y, r_cut):
         """
          Function used to cut input image.
          :param x: int, x coordinate in pixel unit
@@ -137,7 +160,7 @@ class DataProcess(object):
          while(yn):
             m_image = self.cut_image(x, y, r_cut)
             fig_ci=plt.figure()
-            plt.imshow(m_image, origin='lower',cmap="gist_heat")
+            plt.imshow(np.log10(m_image), origin='lower',cmap="gist_heat")
             plt.title('Good frame size? ('+repr(cutsize_data*2+1)+'x'+repr(cutsize_data*2+1)+' pixels^2' + ')',fontsize=font_size)
             plt.show(fig_ci)
             cutyn = input('Hint: appropriate frame size? (y/n): ')
@@ -216,7 +239,7 @@ class DataProcess(object):
         """
         if ra is not  None:
             x_psf, y_psf = self.radec2detector(ra, dec)
-            image_psf = self.cut_image(x_psf, y_psf, r_cut)
+            image_psf = self.cut_image_psf(x_psf, y_psf, r_cut)
         if kernel_size is None:
             kernel_size = np.shape(image_psf)[0]
         image_psf_cut = kernel_util.cut_psf(image_psf, psf_size=kernel_size)
@@ -261,7 +284,10 @@ class DataProcess(object):
             y_detector.append(xy[1])
             multi_band_list.append([kwargs_data, kwargs_psf, kwargs_numerics])
             print("======lensed image " + repr(i + 1) + ", assembled image======")
-            self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name+repr(i+1)+'.pdf',cutout_text=cutout_text+repr(i+1))
+            if len(ra) > 1:
+                self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name+repr(i+1)+'.pdf',cutout_text=cutout_text+repr(i+1))
+            else:
+                self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name + '.pdf', cutout_text=cutout_text + repr(i + 1))
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': multi_band_type}
         return x_detector,y_detector,kwargs_data_joint
 
@@ -293,14 +319,14 @@ class DataProcess(object):
         :param c_index:
         :return:
         """
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 6))
-        ax1.imshow(image_data, origin='lower',cmap="gist_heat")
-        ax1.set_title('Input Image',fontsize =font_size )
-        ax2.imshow(segments_deblend, origin='lower')
+        fig, ax1 = plt.subplots(1, 1)
+        #ax1.imshow(image_data, origin='lower',cmap="gist_heat")
+        #ax1.set_title('Input Image',fontsize =font_size )
+        ax1.imshow(segments_deblend, origin='lower')
         for i in range(len(xcenter)):
-            ax2.text(xcenter[i]*1.1, ycenter[i], 'Seg'+repr(i), color='w')
-        ax2.text(image_data.shape[0]*0.5,image_data.shape[0]*0.1,'Seg '+repr(c_index)+' '+'in center',size=12,color='white')
-        ax2.set_title('Segmentations (S/N >'+repr(self.snr)+')',fontsize =font_size)
+            ax1.text(xcenter[i], ycenter[i], 'Seg'+repr(i), color='w',size = 12)
+        ax1.text(image_data.shape[0]*0.5,image_data.shape[0]*0.1,'Seg '+repr(c_index)+' '+'in center',size=12,color='white')
+        ax1.set_title('Segmentations (S/N >'+repr(self.snr)+')',fontsize =font_size)
         plt.show()
         return 0
 
@@ -346,4 +372,5 @@ class DataProcess(object):
         plt.show()
         fig.savefig(img_name)
         return 0
+
 
