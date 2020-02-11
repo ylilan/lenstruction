@@ -292,7 +292,8 @@ class DataProcess(object):
             else:
                 self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name + '.pdf', cutout_text=cutout_text + repr(i + 1))
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': multi_band_type}
-        return x_detector,y_detector,kwargs_data_joint,mask_list
+        self.data_mask_list = mask_list
+        return x_detector,y_detector,kwargs_data_joint
 
 
 
