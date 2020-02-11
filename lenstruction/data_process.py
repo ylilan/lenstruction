@@ -271,25 +271,28 @@ class DataProcess(object):
         y_detector = []
         kwargs_data_list = []
         kwargs_psf_list = []
+        mask_list = []
         for i in range(len(ra)):
             xy = self.radec2detector(ra[i], dec[i])
             print ("======lensed image "+repr(i+1)+", cutout frame size======")
             cutsize = self.cutsize(xy[0], xy[1], r_cut=r_cut)
             print("======lensed image " + repr(i + 1) + ", segmentations selection======")
             kwargs_data, kwargs_seg = self.data_assemble(x=xy[0], y=xy[1],r_cut=cutsize, add_mask=add_mask)
+            mask = self.data_mask
             kwargs_psf = self.pick_psf(ra = ra_psf, dec = dec_psf)
             kwargs_psf_list.append(kwargs_psf)
             kwargs_data_list.append(kwargs_data)
             x_detector.append(xy[0])
             y_detector.append(xy[1])
             multi_band_list.append([kwargs_data, kwargs_psf, kwargs_numerics])
+            mask_list.append(mask)
             print("======lensed image " + repr(i + 1) + ", assembled image======")
             if len(ra) > 1:
                 self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name+repr(i+1)+'.pdf',cutout_text=cutout_text+repr(i+1))
             else:
                 self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name + '.pdf', cutout_text=cutout_text + repr(i + 1))
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': multi_band_type}
-        return x_detector,y_detector,kwargs_data_joint
+        return x_detector,y_detector,kwargs_data_joint,mask_list
 
 
 
