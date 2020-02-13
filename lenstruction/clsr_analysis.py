@@ -53,9 +53,9 @@ class ClsrAnalysis(object):
         self.kwargs_model = kwargs_model
 
 
-    def plot_modeling(self,kwargs_result,
+    def plot_modeling(self,kwargs_result, center=[0,0],
                       deltaPix_s=0.03,numPix_s=None, text_source='', data_index = 0,
-                      text='sys',img_name='sys',font_size=25,scale_size=0.1,fig_close=False):
+                      text='sys',img_name='sys',font_size=25,scale_size=0.1,fig_close=False,likelihood_mask_list=None):
         """
         a function to show modeling process containing data, reconstructed image, residual map,
         and reconstructed source.
@@ -70,7 +70,7 @@ class ClsrAnalysis(object):
         :return:
         """
         model_plot = ModelPlot(self.multi_band_list, self.kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat",
-                 multi_band_type=self.multi_band_type)
+                 multi_band_type=self.multi_band_type,likelihood_mask_list=likelihood_mask_list)
         num_bands = len(self.kwargs_data_joint['multi_band_list'])
         if num_bands >1:
             f, axes = plt.subplots(num_bands, 3, figsize=(22, 18))
@@ -96,7 +96,8 @@ class ClsrAnalysis(object):
         if numPix_s is None:
             numPix_s = self.kwargs_data_joint['multi_band_list'][0][0]['image_data'].shape[0]
         f_s, axes_s = plt.subplots(1, 1, figsize=(9, 6) )
-        model_plot.source_plot(ax=axes_s, deltaPix_source=deltaPix_s, numPix=numPix_s, band_index=band_index, scale_size=scale_size,
+        model_plot.source_plot(ax=axes_s, deltaPix_source=deltaPix_s, numPix=numPix_s, center=center,
+                               band_index=band_index, scale_size=scale_size,
                                font_size=font_size, text ="Source"+text_source,  plot_scale='log', v_min =-3,
                                with_caustics=True)
         f_s.savefig(img_name +'source.pdf')
