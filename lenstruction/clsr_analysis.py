@@ -22,7 +22,7 @@ def plot_chain(chain_list):
         f, axes = plot_chain_list(chain_list, index=i)
     f.show()
 
-def plot_mcmc(chain_list_mcmc, labels=None,smooth=0.5):
+def plot_mcmc(chain_list_mcmc, labels=None,smooth=0.5,figname='mcmc'):
     """
     a fuction to plot chain_list and contour figure of mcmc results
     :param chain_list_mcmc: chain_list of mcmc results
@@ -36,11 +36,11 @@ def plot_mcmc(chain_list_mcmc, labels=None,smooth=0.5):
         labels = param_mcmc
     if not samples_mcmc == []:
         fig=corner.corner(samples_mcmc, labels=labels,smooth=smooth, show_titles=True, max_n_ticks=3,label_kwargs={"fontsize": 25},
-        title_kwargs = {"fontsize": 0}, quantiles=[0.16, 0.5, 0.84])
+        title_kwargs = {"fontsize": 15}, quantiles=[0.16, 0.5, 0.84])
         for ax in fig.get_axes():
             ax.tick_params(axis='both', labelsize=12)
     fig.show()
-    fig.savefig('mcmc.pdf')
+    fig.savefig(figname+'.pdf')
 
 class ClsrAnalysis(object):
     """
@@ -87,8 +87,8 @@ class ClsrAnalysis(object):
                 ax2 = axes[1]
                 ax3 = axes[2]
                 img_index = data_index
-            model_plot.data_plot(ax=ax1, band_index=band_index, text='Observed'+text+ repr(img_index+1),font_size = font_size)
-            model_plot.model_plot(ax=ax2, image_names=True, band_index=band_index,font_size = font_size, text='Modeled'+text+ repr(img_index+1))
+            model_plot.data_plot(ax=ax1, band_index=band_index, text='Observed'+text,font_size = font_size)
+            model_plot.model_plot(ax=ax2, image_names=True, band_index=band_index,font_size = font_size, text='Modeled'+text)
             model_plot.normalized_residual_plot(ax=ax3, v_min=-6, v_max=6, band_index=band_index,font_size = font_size)
         f.savefig(img_name+'residual.pdf', bbox_inches='tight')
         if fig_close:

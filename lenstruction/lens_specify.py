@@ -226,6 +226,8 @@ class LensSpecify(object):
                 kwargs_lens.append({'grid_interp_x': xaxes[0], 'grid_interp_y': yaxes[:,0], 'f_x': alphax, 'f_y': alphay})
             elif lens_type=='SHIFT':
                 kwargs_lens.append({'alpha_x': ra_center , 'alpha_y': dec_center })
+                #self.betax = alphax[int(r_cut + 1), int(r_cut + 1)]
+                #self.betay = alphay[int(r_cut + 1), int(r_cut + 1)]
             elif lens_type == 'SHEAR':
                 gamma1, gamma2 = LensModel(['INTERPOL']).gamma(util.image2array(xaxes),
                                                                  util.image2array(yaxes), kwargs=kwargs_lens_in,diff = diff)

@@ -67,12 +67,13 @@ class DataProcess(object):
 
 
     def sub_bkg(self,img):
+        print ("test")
         sigma_clip = SigmaClip(sigma=3., iters=10)
         bkg_estimator = SExtractorBackground()
         mask_0 = make_source_mask(img, snr=3, npixels=5, dilate_size=11)
         mask_1 = (np.isnan(img))
         mask = mask_0 + mask_1
-        bkg = Background2D(img, (10, 10), filter_size=(3, 3), sigma_clip=sigma_clip,
+        bkg = Background2D(img, (5, 5), filter_size=(3, 3), sigma_clip=sigma_clip,
                            bkg_estimator=bkg_estimator, mask=mask)
         back = bkg.background * ~mask_1
         return img - back
