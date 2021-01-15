@@ -4,7 +4,8 @@ import numpy as np
 
 
 class ClsrWorkflow(object):
-    def __init__(self, kwargs_data_joint, kwargs_model,lens_params,source_params, kwargs_constraints=None, kwargs_likelihood=None):
+    def __init__(self, kwargs_data_joint, kwargs_model,lens_params,source_params,
+                 lenslight_params=None, kwargs_constraints=None, kwargs_likelihood=None):
         """
         class to  manage cluster source reconstruction.
         This class inherited the FittingSequence class in Workflow module of lenstronomy.
@@ -18,7 +19,7 @@ class ClsrWorkflow(object):
         self.kwargs_data_joint =kwargs_data_joint
         self.multi_band_list = kwargs_data_joint.get('multi_band_list', [])
         self.kwargs_model =kwargs_model
-        kwargs_params = {'lens_model': lens_params, 'source_model': source_params}
+        kwargs_params = {'lens_model': lens_params, 'source_model': source_params, 'lens_light_model': lenslight_params}
         self.kwargs_params= kwargs_params
         if kwargs_constraints is None:
             kwargs_constraints ={}
@@ -84,8 +85,8 @@ class ClsrWorkflow(object):
         elif bic_model_free < bic_model_fix:
             print("Flexion is needed!")
             bic_list = [bic_model_fix, bic_model_free]
-            chain_list = [chain_list_fix, chain_list_free]
-            kwargs_result_list = [kwargs_result_fix,kwargs_result_free]
+            chain_list = [chain_list_fix]
+            kwargs_result_list = [kwargs_result_fix]
         return chain_list, kwargs_result_list, bic_list
 
 

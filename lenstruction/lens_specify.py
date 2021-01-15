@@ -29,7 +29,7 @@ class LensSpecify(object):
        :param kappa: convergence map
        """
        cosmo = LensCosmo(zl, zs)
-       dlsds = cosmo.D_ds / cosmo.D_s
+       dlsds = cosmo.dds / cosmo.ds
        self.dlsds = dlsds
        self.wcs = wcs.WCS(hdul[0].header)
        #alphax
@@ -80,7 +80,8 @@ class LensSpecify(object):
         magnification_list = []
         for i in range(len(ximg_list)):
              kwargs_data = kwargs_data_joint['multi_band_list'][i][0]
-             kwargs_lens, magnification = self.lens_param_initial(x= ximg_list[i], y = yimg_list[i], ra =ra_list[i] , dec= dec_list[i],  kwargs_data =kwargs_data, lens_model_list=lens_model_list, diff=diff)
+             kwargs_lens, magnification = self.lens_param_initial(x= ximg_list[i], y = yimg_list[i], ra =ra_list[i] , dec= dec_list[i], 
+                                                                  kwargs_data =kwargs_data, lens_model_list=lens_model_list, diff=diff)
              kwagrs_lens_list.append(kwargs_lens)
              kwargs_lens_init += (kwargs_lens)
              magnification_list.append(magnification)

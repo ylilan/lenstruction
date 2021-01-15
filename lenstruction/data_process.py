@@ -11,6 +11,10 @@ from astropy import wcs
 from photutils import detect_threshold, detect_sources,deblend_sources, source_properties, Background2D, SExtractorBackground,make_source_mask
 from photutils.datasets import make_noise_image
 from six.moves import input
+from lenstronomy.Data.imaging_data import ImageData
+from decomprofile.data_process import DataProcess as dxhDataProcess
+
+
 
 class DataProcess(object):
     """
@@ -45,7 +49,8 @@ class DataProcess(object):
         else:
             exp_time = exp_time
         self.exp_time = exp_time
-        self.background_rms = background_rms
+        self.background_rms_input = background_rms
+        self.background_rms = None
         self.bakground = background
         self.kernel = kernel
         self.interaction= interaction
@@ -64,13 +69,28 @@ class DataProcess(object):
 
         return x_detector, y_detector
 
+    def bkg_rms(self,x,y, r_cut):
+        """
+        :param background_rms:
+        :return:
+        """
+        background_rms = self.background_rms_input
 
+        if background_rms is not None:
+            if type(background_rms) == type(1.0):
+                background_rms_map =np.zeros((r_cut*2+1, r_cut*2+1)) + background_rms
+            else:
+                background_rms_map = fits.open(background_rms)[0].data[x - r_cut:x + r_cut + 1, y - r_cut:y + r_cut + 1]
+        else:
+            background_rms_map = background_rms
+
+        self.background_rms = background_rms_map
+        return background_rms_map
 
     def sub_bkg(self,img):
-        print ("test")
-        sigma_clip = SigmaClip(sigma=3., iters=10)
+        sigma_clip = SigmaClip(sigma=3.)
         bkg_estimator = SExtractorBackground()
-        mask_0 = make_source_mask(img, snr=3, npixels=5, dilate_size=11)
+        mask_0 = make_source_mask(img, nsigma=3, npixels=5, dilate_size=11)
         mask_1 = (np.isnan(img))
         mask = mask_0 + mask_1
         bkg = Background2D(img, (5, 5), filter_size=(3, 3), sigma_clip=sigma_clip,
@@ -112,11 +132,11 @@ class DataProcess(object):
         snr=self.snr
         npixels=self.npixels
         bakground = self.bakground
-        error = self.background_rms
+        error= self.bkg_rms(x,y,r_cut)
         kernel = self.kernel
         image_cutted = self.cut_image(x,y,r_cut)
         image_data = image_cutted
-        threshold_detect_objs=detect_threshold(data=image_data, snr=snr,background=bakground,error=error)
+        threshold_detect_objs=detect_threshold(data=image_data, nsigma=snr,background=bakground,error=error)
         segments=detect_sources(image_data, threshold_detect_objs, npixels=npixels, filter_kernel=kernel)
         segments_deblend = deblend_sources(image_data, segments, npixels=npixels,nlevels=10)
         segments_deblend_info = source_properties(image_data, segments_deblend)
@@ -178,7 +198,7 @@ class DataProcess(object):
 
 
 
-    def data_assemble(self, x,y, r_cut, add_mask=5):
+    def data_assemble(self, x,y, r_cut, add_mask=5,  pick_choice=False):
        """
        Function to pick up the pieces of data.
        :param x: x coordinate in pixel unit
@@ -192,43 +212,97 @@ class DataProcess(object):
        data_masks_center, _, xcenter, ycenter, c_index = center_mask_info
        image = self.cut_image(x,y,r_cut)
        self.raw_image = image
+       src_mask = np.zeros_like(image)
+       len_mask = np.zeros_like(image)
+       plu_mask = np.zeros_like(image)
+       lenslight_mask_index = []
        if self.interaction:
             self.plot_segmentation(image, segments_deblend_list, xcenter, ycenter, c_index)
-            source_mask_index = [int(number) for number in input('Selection of data via segmentation index separated by space, e.g., 0 1 :').split()]
-            src_mask = np.zeros_like(image)
+            #source light
+            source_mask_index = [int(sidex) for sidex in input('Selection of data via segmentation index separated by space, e.g., 0 1 :').split()]
             for i in source_mask_index:
                 src_mask = src_mask + obj_masks[i]
-            mask = src_mask
+            #lens light
+            lenslightyn = input('Hint: is there lens light? (y/n): ')
+            if lenslightyn == 'y':
+                lenslight_mask_index = [int(lidex) for lidex in input('Selection of lens-plane light via segmentation index separated by space, e.g., 0 1 :').split()]
+                for i in lenslight_mask_index:
+                    len_mask = (len_mask + obj_masks[i])
+            elif lenslightyn == 'n':
+                lenslight_mask_index = []
+                len_mask = np.zeros_like(image)
+            # contamination
+            pluyn = input('Hint: is there contamination? (y/n): ')
+            if pluyn == 'y':
+                plution_mask_index = [int(pidex) for pidex in input('Selection of contamination via segmentation index separated by space, e.g., 0 1 :').split()]
+                for i in plution_mask_index:
+                    plu_mask = (plu_mask + obj_masks[i])
+            elif pluyn == 'n':
+                    plu_mask =  np.zeros_like(image)
        else:
-            mask = data_masks_center
+            src_mask = data_masks_center
+
+       #adding pixels around the selected masks
        selem = np.ones((add_mask, add_mask))
-       img_mask = ndimage.binary_dilation(mask.astype(np.bool), selem)
-       self.data_mask = mask
-       source_mask = image * img_mask
-       _, _, std = sigma_clipped_stats(image, sigma=3.0, mask=source_mask)
+       src_mask = ndimage.binary_dilation(src_mask.astype(np.bool), selem)
+       plu_mask_out = ndimage.binary_dilation(plu_mask.astype(np.bool), selem)
+       plu_mask_out = (plu_mask_out - 1)*-1
+
+       #mask out the contamination
+       maskedimg = image * plu_mask_out
+
+       #pick up the target sources
+       snr = self.snr
+       source_mask = image * src_mask
+       _, _, std = sigma_clipped_stats(image, sigma=snr, mask=source_mask)
        tshape = image.shape
-       img_bkg = make_noise_image(tshape, type='gaussian', mean=0.,
-                                   stddev=std, random_state=12)
-       no_source_mask = (img_mask * -1 + 1) * img_bkg
+       img_bkg = make_noise_image(tshape, type='gaussian', mean=0., stddev=std, random_state=12)
+       no_source_mask = (src_mask * -1 + 1) * img_bkg
        picked_data = source_mask + no_source_mask
-       self.data = picked_data
-       ra_at_xy_0 = (y - r_cut) * self.deltaPix  # (ra,dec) is (y_img,x_img)
-       dec_at_xy_0 = (x - r_cut) * self.deltaPix
+
+       #orginize the output the data
        kwargs_data = {}
        if self.background_rms is None:
             kwargs_data['background_rms'] = std
+            self.background_rms = std
        else:
-            kwargs_data['background_rms'] = self.background_rms
+            kwargs_data['background_rms'] = np.mean(self.background_rms)
        kwargs_data['exposure_time'] = self.exp_time
        kwargs_data['transform_pix2angle'] = np.array([[1, 0], [0, 1]]) * self.deltaPix
+       ra_at_xy_0 = (y - r_cut) * self.deltaPix  # (ra,dec) is (y_img,x_img)
+       dec_at_xy_0 = (x - r_cut) * self.deltaPix
        kwargs_data['ra_at_xy_0'] = ra_at_xy_0
        kwargs_data['dec_at_xy_0'] = dec_at_xy_0
-       kwargs_data['image_data'] = picked_data
+
+       #coordinate of the lens light
+       xlenlight, ylenlight = [], []
+       if lenslight_mask_index !=[]:
+            for i in lenslight_mask_index:
+                xlenlight.append(ra_at_xy_0 + int(xcenter[i]) * self.deltaPix )
+                ylenlight.append(dec_at_xy_0 + int(ycenter[i])* self.deltaPix )
+
+
+       #choose we pick up target data or maskout the pollution
+       if pick_choice:
+           kwargs_data['image_data'] = picked_data
+       else:
+           kwargs_data['image_data'] = maskedimg
+
+       self.data = kwargs_data['image_data']
+       self.kwargs_data = kwargs_data
+       self.data_mask = src_mask
+       self.len_mask  = len_mask
+       self.plu_mask = plu_mask_out
+       self.obj_masks = obj_masks
+       self.maskedimg = maskedimg
+       imageData = ImageData(**kwargs_data)
+       self.imageData = imageData
+
        kwargs_seg = [segments_deblend_list, xcenter, ycenter, c_index]
-       return kwargs_data, kwargs_seg
+       return kwargs_data, kwargs_seg, [xlenlight, ylenlight]
 
 
-    def pick_psf(self, ra, dec, r_cut=15, pixel_size=None, kernel_size=None):
+    def pick_psf(self, ra=None, dec=None, r_cut=15, pixel_size=None, kernel_size=None):
         """
         select psf
         :param x:  x coordinate.
@@ -238,23 +312,44 @@ class DataProcess(object):
         :param kernel_size: kernel size of the psf.
         :return: kwargs_psf
         """
-        if ra is not  None:
+        if ra is not None:
             x_psf, y_psf = self.radec2detector(ra, dec)
             image_psf = self.cut_image_psf(x_psf, y_psf, r_cut)
+        else:
+            data_process = dxhDataProcess(fov_image=self.image, target_pos=[0, 0], pos_type='pixel', zp=0)
+            if self.interaction:
+                psfyn = input('Hint: do you want to pick up the PSF youself? (y/n): ')
+                if psfyn =='y':
+                    print("\033[38;2;{};{};{}m{} \033[38;2;255;255;255m".format(255, 0, 0, 'Please only pick 1 psf, otherwise only the 1st will be chosen'))
+                    data_process.find_PSF(radius=r_cut, user_option=True)
+                    image_psf = data_process.PSF_list[0]
+                else:
+                    data_process.find_PSF(radius=r_cut, user_option=False)
+                    image_psf = data_process.PSF_list[0]
+            else:
+                data_process.find_PSF(radius=r_cut, user_option=False)
+                image_psf = data_process.PSF_list[0]
+
         if kernel_size is None:
             kernel_size = np.shape(image_psf)[0]
-        image_psf_cut = kernel_util.cut_psf(image_psf, psf_size=kernel_size)
+
+        image_psf_cut = kernel_util.cut_psf(image_psf, psf_size=kernel_size)#why using kernel ?
+
+
         if pixel_size is None:
             pixel_size=self.deltaPix
         else:
             pixel_size=pixel_size
+
         kwargs_psf = {'psf_type': 'PIXEL', 'kernel_point_source': image_psf_cut, 'pixel_size': pixel_size}
+        self.psf = image_psf_cut
         # TODO adding simulated psf
         return kwargs_psf
 
 
 
-    def params(self, ra, dec, ra_psf = None, dec_psf =None, r_cut=100, add_mask=5, multi_band_type='joint-linear',img_name='data',cutout_text='lensed image'):
+    def params(self, ra, dec, ra_psf = None, dec_psf =None, r_cut=100, add_mask=5, pick_choice=True,multi_band_type='joint-linear',
+               img_name='data',cutout_text='lensed image',kwargs_numerics={}):
         """
          image data parameters configuration in lenstronomy keywords arguments
         :param ra:
@@ -266,7 +361,7 @@ class DataProcess(object):
         :param multi_band_type:
         :return: x, y coordinate in pixel units, image data keywords arguments
         """
-        kwargs_numerics = self.numerics()
+        kwargs_numerics = self.numerics(**kwargs_numerics)
         multi_band_list =[]
         x_detector = []
         y_detector = []
@@ -278,7 +373,7 @@ class DataProcess(object):
             print ("======lensed image "+repr(i+1)+", cutout frame size======")
             cutsize = self.cutsize(xy[0], xy[1], r_cut=r_cut)
             print("======lensed image " + repr(i + 1) + ", segmentations selection======")
-            kwargs_data, kwargs_seg = self.data_assemble(x=xy[0], y=xy[1],r_cut=cutsize, add_mask=add_mask)
+            kwargs_data, kwargs_seg, xylenslight= self.data_assemble(x=xy[0], y=xy[1],r_cut=cutsize, add_mask=add_mask,pick_choice=pick_choice)
             mask = self.data_mask
             kwargs_psf = self.pick_psf(ra = ra_psf, dec = dec_psf)
             kwargs_psf_list.append(kwargs_psf)
@@ -288,13 +383,14 @@ class DataProcess(object):
             multi_band_list.append([kwargs_data, kwargs_psf, kwargs_numerics])
             mask_list.append(mask)
             print("======lensed image " + repr(i + 1) + ", assembled image======")
-            if len(ra) > 1:
-                self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name+repr(i+1)+'.pdf',cutout_text=cutout_text+repr(i+1))
-            else:
-                self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name + '.pdf', cutout_text=cutout_text + repr(i + 1))
+           # if len(ra) > 1:
+           #     self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name+repr(i+1)+'.pdf',cutout_text=cutout_text+repr(i+1))
+           # else:
+           #     self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name + '.pdf', cutout_text=cutout_text + repr(i + 1))
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': multi_band_type}
         self.data_mask_list = mask_list
-        return x_detector,y_detector,kwargs_data_joint
+        self.plot_prodata_psf()
+        return x_detector,y_detector,kwargs_data_joint, xylenslight
 
 
 
@@ -330,10 +426,47 @@ class DataProcess(object):
         ax1.imshow(segments_deblend, origin='lower')
         for i in range(len(xcenter)):
             ax1.text(xcenter[i], ycenter[i], 'Seg'+repr(i), color='w',size = 12)
+            print(i,xcenter[i], ycenter[i])
         ax1.text(image_data.shape[0]*0.5,image_data.shape[0]*0.1,'Seg '+repr(c_index)+' '+'in center',size=12,color='white')
         ax1.set_title('Segmentations (S/N >'+repr(self.snr)+')',fontsize =font_size)
         plt.show()
         return 0
+
+
+
+    def plot_prodata_psf(self,font_size=28):
+        """
+        plot original data, processed one (data+lens light+poluution), psf
+        :return:
+        """
+        image = self.raw_image
+        len_mask = self.len_mask
+        plu_mask_out = self.plu_mask
+
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=(19, 10))
+        ax1.imshow(image, origin='lower', cmap="gist_heat")
+        ax1.set_title('Original Image', fontsize=font_size)
+        ax1.text(image.shape[0] * 0.2, image.shape[0] * 0.05, 'lensed image', size=20, color='white', weight="bold")
+        ax1.axis('off')
+        #
+        ax2.imshow(len_mask, origin='lower')
+        ax2.set_title('Lens light', fontsize=font_size)
+        ax2.axis('off')
+        #
+        ax3.imshow(plu_mask_out, origin='lower')
+        ax3.set_title('Mask', fontsize=font_size)
+        ax3.axis('off')
+#
+        psf=self.psf
+        ax4.imshow(np.log10(psf), origin='lower', cmap="gist_heat")
+        ax4.set_title('lg(PSF)', fontsize=font_size)
+        ax4.axis('off')
+        #ax3.text(image.shape[0] * 0.1, image.shape[0] * 0.05, 'pixels (S/N >' + repr(self.snr) + ')', size=20,
+        #         color='white', weight="bold")
+        #ax3.text(image.shape[0] * 0.1, image.shape[0] * 0.9, 'additional pixels', size=20, color='r', weight="bold")
+
+        plt.show()
+
 
 
 

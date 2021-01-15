@@ -98,7 +98,7 @@ class ClsrAnalysis(object):
         f_s, axes_s = plt.subplots(1, 1, figsize=(9, 6) )
         model_plot.source_plot(ax=axes_s, deltaPix_source=deltaPix_s, numPix=numPix_s, center=center,
                                band_index=band_index, scale_size=scale_size,
-                               font_size=font_size, text ="Source"+text_source,  plot_scale='log', v_min =-3,
+                               font_size=font_size, text ="Source"+text_source,  plot_scale='log', v_min =-5,
                                with_caustics=True)
         f_s.savefig(img_name +'source.pdf')
         if fig_close:
