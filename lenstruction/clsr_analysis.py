@@ -65,7 +65,7 @@ class ClsrAnalysis(object):
         :param multi_band_type:string, e.g., 'joint-linear', 'single-band'
         :param text: string, label of reconstructed image
         :param text_source:string, label of reconstructed source
-        :param img_name: string, label of saved images
+        :param img_name:  string, label of saved images
         :param font_size: font_size
         :return:
         """

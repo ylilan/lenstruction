@@ -151,10 +151,10 @@ class DataProcess(object):
         for i in range(nobjs):
             mask = ((segments_deblend.data==i+1)*1)
             obj_masks.append(mask)
-        xmin = segments_deblend_info.to_table(columns=['xmin'])['xmin'].value
-        xmax = segments_deblend_info.to_table(columns=['xmax'])['xmax'].value
-        ymin = segments_deblend_info.to_table(columns=['ymin'])['ymin'].value
-        ymax = segments_deblend_info.to_table(columns=['ymax'])['ymax'].value
+        xmin = segments_deblend_info.to_table(columns=['bbox_xmin'])['bbox_xmin'].value
+        xmax = segments_deblend_info.to_table(columns=['bbox_xmax'])['bbox_xmax'].value
+        ymin = segments_deblend_info.to_table(columns=['bbox_ymin'])['bbox_ymin'].value
+        ymax = segments_deblend_info.to_table(columns=['bbox_ymax'])['bbox_ymax'].value
         xmin_c, xmax_c = xmin[c_index], xmax[c_index]
         ymin_c, ymax_c = ymin[c_index], ymax[c_index]
         xsize_c = xmax_c - xmin_c
@@ -176,7 +176,7 @@ class DataProcess(object):
      :return: cutout size
      """
      cutsize_data = r_cut
-     if self.interaction:
+     if self.interaction & False:
          yn = True
          while(yn):
             m_image = self.cut_image(x, y, r_cut)
@@ -200,37 +200,40 @@ class DataProcess(object):
 
     def data_assemble(self, x,y, r_cut, add_mask=5,  pick_choice=False):
        """
-       Function to pick up the pieces of data.
+       Function to pick up the pieces of source, lens light, pollution(mask)
        :param x: x coordinate in pixel unit
        :param y: y coordinate in pixel unit
        :param r_cut: radius size of the data.
        :param add_mask: number of pixels adding around picked pieces
+       :param pick_choice: True to only select source region to fit, False to use whole observation to fit
        :return: kwargs_data
        """
-
+       #segmentation components
        obj_masks,center_mask_info, segments_deblend_list = self._seg_image(x, y, r_cut=r_cut)
        data_masks_center, _, xcenter, ycenter, c_index = center_mask_info
        image = self.cut_image(x,y,r_cut)
        self.raw_image = image
        src_mask = np.zeros_like(image)
-       len_mask = np.zeros_like(image)
+       lens_mask = np.zeros_like(image)
        plu_mask = np.zeros_like(image)
        lenslight_mask_index = []
        if self.interaction:
             self.plot_segmentation(image, segments_deblend_list, xcenter, ycenter, c_index)
             #source light
-            source_mask_index = [int(sidex) for sidex in input('Selection of data via segmentation index separated by space, e.g., 0 1 :').split()]
-            for i in source_mask_index:
-                src_mask = src_mask + obj_masks[i]
+            if pick_choice:
+                source_mask_index = [int(sidex) for sidex in input('Selection of data via segmentation index separated by space, e.g., 0 1 :').split()]
+                for i in source_mask_index:
+                    src_mask = src_mask + obj_masks[i]
             #lens light
             lenslightyn = input('Hint: is there lens light? (y/n): ')
             if lenslightyn == 'y':
                 lenslight_mask_index = [int(lidex) for lidex in input('Selection of lens-plane light via segmentation index separated by space, e.g., 0 1 :').split()]
                 for i in lenslight_mask_index:
-                    len_mask = (len_mask + obj_masks[i])
+                    lens_mask = (lens_mask + obj_masks[i])
             elif lenslightyn == 'n':
                 lenslight_mask_index = []
-                len_mask = np.zeros_like(image)
+            else:
+                raise ValueError("Please input 'y' or 'n' !")
             # contamination
             pluyn = input('Hint: is there contamination? (y/n): ')
             if pluyn == 'y':
@@ -239,6 +242,8 @@ class DataProcess(object):
                     plu_mask = (plu_mask + obj_masks[i])
             elif pluyn == 'n':
                     plu_mask =  np.zeros_like(image)
+            else:
+                raise ValueError("Please input 'y' or 'n' !")
        else:
             src_mask = data_masks_center
 
@@ -248,20 +253,25 @@ class DataProcess(object):
        plu_mask_out = ndimage.binary_dilation(plu_mask.astype(np.bool), selem)
        plu_mask_out = (plu_mask_out - 1)*-1
 
-       #mask out the contamination
-       maskedimg = image * plu_mask_out
-
-       #pick up the target sources
+       #select source region to fit, or to use whole observation to fit
+       ##select source region to fit
        snr = self.snr
        source_mask = image * src_mask
        _, _, std = sigma_clipped_stats(image, sigma=snr, mask=source_mask)
        tshape = image.shape
-       img_bkg = make_noise_image(tshape, type='gaussian', mean=0., stddev=std, random_state=12)
+       img_bkg = make_noise_image(tshape, distribution='gaussian', mean=0., stddev=std, seed=12)
        no_source_mask = (src_mask * -1 + 1) * img_bkg
        picked_data = source_mask + no_source_mask
+       ##use whole observation to fit while mask out the contamination
+       maskedimg = image * plu_mask_out
 
-       #orginize the output the data
+       ##orginize the output 'kwargs_data'
        kwargs_data = {}
+       if pick_choice:
+           kwargs_data['image_data'] = picked_data#select source region to fit
+       else:
+           kwargs_data['image_data'] = maskedimg#use whole observation to fit while mask out the contamination
+
        if self.background_rms is None:
             kwargs_data['background_rms'] = std
             self.background_rms = std
@@ -281,28 +291,21 @@ class DataProcess(object):
                 xlenlight.append(ra_at_xy_0 + int(xcenter[i]) * self.deltaPix )
                 ylenlight.append(dec_at_xy_0 + int(ycenter[i])* self.deltaPix )
 
-
-       #choose we pick up target data or maskout the pollution
-       if pick_choice:
-           kwargs_data['image_data'] = picked_data
-       else:
-           kwargs_data['image_data'] = maskedimg
-
+       #for output
        self.data = kwargs_data['image_data']
        self.kwargs_data = kwargs_data
        self.data_mask = src_mask
-       self.len_mask  = len_mask
+       self.lens_mask  = lens_mask
        self.plu_mask = plu_mask_out
        self.obj_masks = obj_masks
-       self.maskedimg = maskedimg
        imageData = ImageData(**kwargs_data)
        self.imageData = imageData
-
        kwargs_seg = [segments_deblend_list, xcenter, ycenter, c_index]
+
        return kwargs_data, kwargs_seg, [xlenlight, ylenlight]
 
 
-    def pick_psf(self, ra=None, dec=None, r_cut=15, pixel_size=None, kernel_size=None):
+    def pick_psf(self, ra=None, dec=None, r_cut=15, pixel_size=None, kernel_size=None, pick=True):
         """
         select psf
         :param x:  x coordinate.
@@ -317,15 +320,17 @@ class DataProcess(object):
             image_psf = self.cut_image_psf(x_psf, y_psf, r_cut)
         else:
             data_process = dxhDataProcess(fov_image=self.image, target_pos=[0, 0], pos_type='pixel', zp=0)
-            if self.interaction:
+            if self.interaction & pick:
                 psfyn = input('Hint: do you want to pick up the PSF youself? (y/n): ')
                 if psfyn =='y':
-                    print("\033[38;2;{};{};{}m{} \033[38;2;255;255;255m".format(255, 0, 0, 'Please only pick 1 psf, otherwise only the 1st will be chosen'))
+                    print(('Please only pick 1 psf, otherwise only the 1st will be chosen'))
                     data_process.find_PSF(radius=r_cut, user_option=True)
                     image_psf = data_process.PSF_list[0]
-                else:
+                elif psfyn =='n':
                     data_process.find_PSF(radius=r_cut, user_option=False)
                     image_psf = data_process.PSF_list[0]
+                else:
+                    raise ValueError("Please input 'y' or 'n' !")
             else:
                 data_process.find_PSF(radius=r_cut, user_option=False)
                 image_psf = data_process.PSF_list[0]
@@ -348,8 +353,8 @@ class DataProcess(object):
 
 
 
-    def params(self, ra, dec, ra_psf = None, dec_psf =None, r_cut=100, add_mask=5, pick_choice=True,multi_band_type='joint-linear',
-               img_name='data',cutout_text='lensed image',kwargs_numerics={}):
+    def params(self, ra, dec, ra_psf = None, dec_psf =None, r_cut=100, add_mask=5, pick_choice=False,
+               multi_band_type='joint-linear', kwargs_numerics={}):
         """
          image data parameters configuration in lenstronomy keywords arguments
         :param ra:
@@ -362,35 +367,34 @@ class DataProcess(object):
         :return: x, y coordinate in pixel units, image data keywords arguments
         """
         kwargs_numerics = self.numerics(**kwargs_numerics)
+        kwargs_psf = self.pick_psf(ra=ra_psf, dec=dec_psf)
         multi_band_list =[]
         x_detector = []
         y_detector = []
-        kwargs_data_list = []
-        kwargs_psf_list = []
-        mask_list = []
+        xylenslight_list = []
+        data_mask_list = []
+        lens_mask_list = []
+        plu_mask_out_list = []
+
         for i in range(len(ra)):
             xy = self.radec2detector(ra[i], dec[i])
-            print ("======lensed image "+repr(i+1)+", cutout frame size======")
-            cutsize = self.cutsize(xy[0], xy[1], r_cut=r_cut)
-            print("======lensed image " + repr(i + 1) + ", segmentations selection======")
-            kwargs_data, kwargs_seg, xylenslight= self.data_assemble(x=xy[0], y=xy[1],r_cut=cutsize, add_mask=add_mask,pick_choice=pick_choice)
-            mask = self.data_mask
-            kwargs_psf = self.pick_psf(ra = ra_psf, dec = dec_psf)
-            kwargs_psf_list.append(kwargs_psf)
-            kwargs_data_list.append(kwargs_data)
             x_detector.append(xy[0])
-            y_detector.append(xy[1])
+            y_detector.append(xy[0])
+            cutsize = self.cutsize(xy[0], xy[1], r_cut=r_cut)
+            kwargs_data, _, xylenslight= self.data_assemble(x=xy[0], y=xy[1],r_cut=cutsize, add_mask=add_mask,pick_choice=pick_choice)
             multi_band_list.append([kwargs_data, kwargs_psf, kwargs_numerics])
-            mask_list.append(mask)
-            print("======lensed image " + repr(i + 1) + ", assembled image======")
-           # if len(ra) > 1:
-           #     self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name+repr(i+1)+'.pdf',cutout_text=cutout_text+repr(i+1))
-           # else:
-           #     self.plot_data_assemble(kwargs_seg=kwargs_seg, add_mask=add_mask,img_name=img_name + '.pdf', cutout_text=cutout_text + repr(i + 1))
+            xylenslight_list.append(xylenslight)
+            data_mask_list.append(self.data_mask)
+            lens_mask_list.append(self.lens_mask)
+            plu_mask_out_list.append(self.plu_mask)
+            #plot data, lens light, pollution
+            self.plot_prodata_psf()
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': multi_band_type}
-        self.data_mask_list = mask_list
-        self.plot_prodata_psf()
-        return x_detector,y_detector,kwargs_data_joint, xylenslight
+        self.data_mask_list = data_mask_list
+        self.lens_mask_list = lens_mask_list
+        self.plu_mask_out_list  = plu_mask_out_list
+
+        return x_detector,  y_detector, xylenslight, kwargs_data_joint
 
 
 
@@ -420,15 +424,18 @@ class DataProcess(object):
         :param c_index:
         :return:
         """
-        fig, ax1 = plt.subplots(1, 1)
-        #ax1.imshow(image_data, origin='lower',cmap="gist_heat")
-        #ax1.set_title('Input Image',fontsize =font_size )
-        ax1.imshow(segments_deblend, origin='lower')
+        fig, (ax1, ax2) = plt.subplots(1, 2,figsize=(10,6))
+        ax1.imshow(image_data, origin='lower',cmap="gist_heat")
+        ax1.set_title('Input Image',fontsize =font_size )
+
+        ax2.imshow(segments_deblend, origin='lower')
         for i in range(len(xcenter)):
-            ax1.text(xcenter[i], ycenter[i], 'Seg'+repr(i), color='w',size = 12)
+            ax2.text(xcenter[i], ycenter[i], repr(i), color='r',size = 12)
             print(i,xcenter[i], ycenter[i])
-        ax1.text(image_data.shape[0]*0.5,image_data.shape[0]*0.1,'Seg '+repr(c_index)+' '+'in center',size=12,color='white')
-        ax1.set_title('Segmentations (S/N >'+repr(self.snr)+')',fontsize =font_size)
+        ax2.text(image_data.shape[0]*0.5,image_data.shape[0]*0.1,'Seg '+repr(c_index)+' '+'in center',size=12,color='white')
+        ax2.set_title('Segmentations (S/N >'+repr(self.snr)+')',fontsize =font_size)
+
+
         plt.show()
         return 0
 
@@ -436,34 +443,37 @@ class DataProcess(object):
 
     def plot_prodata_psf(self,font_size=28):
         """
-        plot original data, processed one (data+lens light+poluution), psf
+        plot original data, processed one (data+lens light+pollution), lens light, mask, psf
         :return:
         """
-        image = self.raw_image
-        len_mask = self.len_mask
+        rawimage = self.raw_image
+        dataimage = self.data
+        len_mask = self.lens_mask
         plu_mask_out = self.plu_mask
 
-        fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=(19, 10))
-        ax1.imshow(image, origin='lower', cmap="gist_heat")
+        fig, (ax1, ax2, ax3, ax4,ax5) = plt.subplots(1, 5, figsize=(19, 10))
+        ax1.imshow(rawimage, origin='lower', cmap="gist_heat")
         ax1.set_title('Original Image', fontsize=font_size)
-        ax1.text(image.shape[0] * 0.2, image.shape[0] * 0.05, 'lensed image', size=20, color='white', weight="bold")
+        ax1.text(rawimage.shape[0] * 0.2, rawimage.shape[0] * 0.05, 'observation', size=20, color='white', weight="bold")
         ax1.axis('off')
         #
-        ax2.imshow(len_mask, origin='lower')
-        ax2.set_title('Lens light', fontsize=font_size)
+        ax2.imshow(dataimage, origin='lower', cmap="gist_heat")
+        ax2.set_title('Image Data', fontsize=font_size)
+        ax2.text(dataimage.shape[0] * 0.2, dataimage.shape[0] * 0.05, 'image data', size=20, color='white', weight="bold")
         ax2.axis('off')
         #
-        ax3.imshow(plu_mask_out, origin='lower')
-        ax3.set_title('Mask', fontsize=font_size)
+        ax3.imshow(len_mask, origin='lower')
+        ax3.set_title('Lens light', fontsize=font_size)
         ax3.axis('off')
+        #
+        ax4.imshow(plu_mask_out, origin='lower')
+        ax4.set_title('Mask', fontsize=font_size)
+        ax4.axis('off')
 #
         psf=self.psf
-        ax4.imshow(np.log10(psf), origin='lower', cmap="gist_heat")
-        ax4.set_title('lg(PSF)', fontsize=font_size)
-        ax4.axis('off')
-        #ax3.text(image.shape[0] * 0.1, image.shape[0] * 0.05, 'pixels (S/N >' + repr(self.snr) + ')', size=20,
-        #         color='white', weight="bold")
-        #ax3.text(image.shape[0] * 0.1, image.shape[0] * 0.9, 'additional pixels', size=20, color='r', weight="bold")
+        ax5.imshow(np.log10(psf), origin='lower', cmap="gist_heat")
+        ax5.set_title('lg(PSF)', fontsize=font_size)
+        ax5.axis('off')
 
         plt.show()
 
