@@ -12,7 +12,7 @@ from photutils import detect_threshold, detect_sources,deblend_sources, source_p
 from photutils.datasets import make_noise_image
 from six.moves import input
 from lenstronomy.Data.imaging_data import ImageData
-from decomprofile.data_process import DataProcess as dxhDataProcess
+#from decomprofile.data_process import DataProcess as dxhDataProcess
 
 
 
@@ -21,7 +21,7 @@ class DataProcess(object):
     The class contains useful fuctions to do, e.g. cut image, calculate cutsize, make mask of images.....
     """
     def __init__(self, data, snr=3.0, npixels=20,deltaPix=None, exp_time=None,background_rms=None,
-                 background=None, kernel = None, interaction = True):
+                 wcs_data=None, background=None, segmap=None, psf=None, kernel = None, interaction = True):
         """
 
         :param data: fits format, image fits file.
@@ -36,7 +36,11 @@ class DataProcess(object):
         """
 
         self.hdul = fits.open(data)
-        self.wcs = wcs.WCS(self.hdul[0].header)
+        if wcs_data is None:
+            self.wcs = wcs.WCS(self.hdul[0].header)
+        else:
+            print ("wcs is not none ")
+            self.wcs = wcs_data
         if deltaPix is None:
             self.deltaPix= round((self.wcs.wcs_pix2world([[0, 100]], 1)[0][1]
                                   - self.wcs.wcs_pix2world([[0, 0]], 1)[0][1]) * 3600 * 0.01, 2)
@@ -55,7 +59,11 @@ class DataProcess(object):
         self.kernel = kernel
         self.interaction= interaction
         self.image = self.hdul[0].data
-
+        self.psf_input = psf
+        if segmap is not None:
+            self.segmap = fits.open(segmap)
+        else:
+            self.segmap = None
 
     def radec2detector(self,ra,dec):
         """
@@ -93,10 +101,11 @@ class DataProcess(object):
         mask_0 = make_source_mask(img, nsigma=3, npixels=5, dilate_size=11)
         mask_1 = (np.isnan(img))
         mask = mask_0 + mask_1
-        bkg = Background2D(img, (5, 5), filter_size=(3, 3), sigma_clip=sigma_clip,
-                           bkg_estimator=bkg_estimator, mask=mask)
-        back = bkg.background * ~mask_1
-        return img - back
+        #bkg = Background2D(img, (5, 5), filter_size=(3, 3), sigma_clip=sigma_clip,
+        #                   bkg_estimator=bkg_estimator, mask=mask)
+        #back = bkg.background * ~mask_1
+        #return img - back
+        return img
 
     def cut_image(self, x, y, r_cut):
         """
@@ -136,7 +145,7 @@ class DataProcess(object):
         kernel = self.kernel
         image_cutted = self.cut_image(x,y,r_cut)
         image_data = image_cutted
-        threshold_detect_objs=detect_threshold(data=image_data, nsigma=snr,background=bakground,error=error)
+        threshold_detect_objs=detect_threshold(data=image_data, nsigma=snr,error=error)
         segments=detect_sources(image_data, threshold_detect_objs, npixels=npixels, filter_kernel=kernel)
         segments_deblend = deblend_sources(image_data, segments, npixels=npixels,nlevels=10)
         segments_deblend_info = source_properties(image_data, segments_deblend)
@@ -217,7 +226,47 @@ class DataProcess(object):
        lens_mask = np.zeros_like(image)
        plu_mask = np.zeros_like(image)
        lenslight_mask_index = []
-       if self.interaction:
+       if self.segmap is not None and self.interaction:
+           segmap=self.segmap[0].data
+           segdata = segmap[x - r_cut:x + r_cut + 1, y - r_cut:y + r_cut + 1]
+           plt.imshow(segdata, origin='lower')
+           nlabel = np.unique(segdata)
+           for i in range(nlabel.shape[0] - 1):
+               ax = (int((np.where(segdata == nlabel[i + 1])[0].max() - np.where(segdata == nlabel[i + 1])[0].min()) / 2 +
+                   np.where(segdata == nlabel[i + 1])[0].min()))
+               ay = (int((np.where(segdata == nlabel[i + 1])[1].max() - np.where(segdata == nlabel[i + 1])[1].min()) / 3 +
+                   np.where(segdata == nlabel[i + 1])[1].min()))
+               plt.text(ay, ax, repr(nlabel[i + 1]), color='r', fontsize=15)
+           plt.title('Input segmentation map')
+           plt.show()
+           source_mask_index = [int(sidex) for sidex in input('Selection of data via (inputed) segmentation index separated by space, e.g., 0 1 :').split()]
+           for i in source_mask_index:
+               src_mask = src_mask + segdata*(segdata==i*1)
+        # lens light
+           lenslightyn = input('Hint: is there lens light? (y/n): ')
+           if lenslightyn == 'y':
+                lenslight_mask_index = [int(lidex) for lidex in input('Selection of lens-plane light via (inputed) segmentation index separated by space, e.g., 0 1 :').split()]
+                for i in lenslight_mask_index:
+                    lens_mask = (lens_mask + segdata*(segdata==i*1))
+           elif lenslightyn == 'n':
+                lenslight_mask_index = []
+           else:
+                raise ValueError("Please input 'y' or 'n' !")
+       # contamination
+           pluyn = input('Hint: is there contamination? (y/n): ')
+           if pluyn == 'y':
+                plution_mask_index = [int(pidex) for pidex in input('Selection of contamination via (inputed) segmentation index separated by space, e.g., 0 1 :').split()]
+                for i in plution_mask_index:
+                    plu_mask = (plu_mask + segdata*(segdata==i*1))
+           elif pluyn == 'n':
+                plu_mask = np.zeros_like(image)
+           else:
+                raise ValueError("Please input 'y' or 'n' !")
+
+
+
+       if self.segmap is None and self.interaction:
+      # if self.interaction:
             self.plot_segmentation(image, segments_deblend_list, xcenter, ycenter, c_index)
             #source light
             if pick_choice:
@@ -247,6 +296,7 @@ class DataProcess(object):
        else:
             src_mask = data_masks_center
 
+
        #adding pixels around the selected masks
        selem = np.ones((add_mask, add_mask))
        src_mask = ndimage.binary_dilation(src_mask.astype(np.bool), selem)
@@ -254,15 +304,23 @@ class DataProcess(object):
        plu_mask_out = (plu_mask_out - 1)*-1
 
        #select source region to fit, or to use whole observation to fit
-       ##select source region to fit
+       ##1.select source region to fit
        snr = self.snr
        source_mask = image * src_mask
-       _, _, std = sigma_clipped_stats(image, sigma=snr, mask=source_mask)
-       tshape = image.shape
-       img_bkg = make_noise_image(tshape, distribution='gaussian', mean=0., stddev=std, seed=12)
+       #create background image for picked
+       if self.background_rms is None:
+            _, _, std = sigma_clipped_stats(image, sigma=snr, mask=source_mask)
+            tshape = image.shape
+            img_bkg = make_noise_image(tshape, distribution='gaussian', mean=0., stddev=std, seed=12)
+       else:
+           tshape = image.shape
+           std=np.mean(self.background_rms)
+           img_bkg = make_noise_image(tshape, distribution='gaussian', mean=0., stddev=std, seed=12)
+
        no_source_mask = (src_mask * -1 + 1) * img_bkg
        picked_data = source_mask + no_source_mask
-       ##use whole observation to fit while mask out the contamination
+
+       ##2.use whole observation to fit while mask out the contamination
        maskedimg = image * plu_mask_out
 
        ##orginize the output 'kwargs_data'
@@ -315,11 +373,15 @@ class DataProcess(object):
         :param kernel_size: kernel size of the psf.
         :return: kwargs_psf
         """
-        if ra is not None:
+        if self.psf_input is not None:
+            image_psf = self.psf_input
+        elif ra is not None:
             x_psf, y_psf = self.radec2detector(ra, dec)
             image_psf = self.cut_image_psf(x_psf, y_psf, r_cut)
         else:
-            data_process = dxhDataProcess(fov_image=self.image, target_pos=[0, 0], pos_type='pixel', zp=0)
+            #automatically select psf in the field
+            #data_process = dxhDataProcess(fov_image=self.image, target_pos=[0, 0], pos_type='pixel', zp=0)
+            print ("try to find psf by code itself")
             if self.interaction & pick:
                 psfyn = input('Hint: do you want to pick up the PSF youself? (y/n): ')
                 if psfyn =='y':
@@ -354,7 +416,7 @@ class DataProcess(object):
 
 
     def params(self, ra, dec, ra_psf = None, dec_psf =None, r_cut=100, add_mask=5, pick_choice=False,
-               multi_band_type='joint-linear', kwargs_numerics={}):
+               multi_band_type='joint-linear', kwargs_numerics={},img_name='prodata_psf.pdf',img_id=0):
         """
          image data parameters configuration in lenstronomy keywords arguments
         :param ra:
@@ -379,7 +441,7 @@ class DataProcess(object):
         for i in range(len(ra)):
             xy = self.radec2detector(ra[i], dec[i])
             x_detector.append(xy[0])
-            y_detector.append(xy[0])
+            y_detector.append(xy[1])
             cutsize = self.cutsize(xy[0], xy[1], r_cut=r_cut)
             kwargs_data, _, xylenslight= self.data_assemble(x=xy[0], y=xy[1],r_cut=cutsize, add_mask=add_mask,pick_choice=pick_choice)
             multi_band_list.append([kwargs_data, kwargs_psf, kwargs_numerics])
@@ -388,7 +450,7 @@ class DataProcess(object):
             lens_mask_list.append(self.lens_mask)
             plu_mask_out_list.append(self.plu_mask)
             #plot data, lens light, pollution
-            self.plot_prodata_psf()
+            self.plot_prodata_psf(img_name=img_name,img_id=img_id)
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': multi_band_type}
         self.data_mask_list = data_mask_list
         self.lens_mask_list = lens_mask_list
@@ -424,8 +486,10 @@ class DataProcess(object):
         :param c_index:
         :return:
         """
+        n_max=np.max(image_data)*0.5
+        n_min = np.min(image_data)
         fig, (ax1, ax2) = plt.subplots(1, 2,figsize=(10,6))
-        ax1.imshow(image_data, origin='lower',cmap="gist_heat")
+        ax1.imshow((image_data), origin='lower',cmap="gist_heat", vmax=n_max,vmin=n_min)
         ax1.set_title('Input Image',fontsize =font_size )
 
         ax2.imshow(segments_deblend, origin='lower')
@@ -441,7 +505,7 @@ class DataProcess(object):
 
 
 
-    def plot_prodata_psf(self,font_size=28):
+    def plot_prodata_psf(self,font_size=28,img_name='prodata_psf.pdf',img_id=0):
         """
         plot original data, processed one (data+lens light+pollution), lens light, mask, psf
         :return:
@@ -450,14 +514,18 @@ class DataProcess(object):
         dataimage = self.data
         len_mask = self.lens_mask
         plu_mask_out = self.plu_mask
+        n_max=np.max(dataimage)*0.5
+        n_min = np.min(dataimage)
 
         fig, (ax1, ax2, ax3, ax4,ax5) = plt.subplots(1, 5, figsize=(19, 10))
-        ax1.imshow(rawimage, origin='lower', cmap="gist_heat")
+        ax1.imshow((rawimage), origin='lower', cmap="gist_heat", vmax=n_max,vmin=n_min)
         ax1.set_title('Original Image', fontsize=font_size)
+        ax1.text(rawimage.shape[0] * 0.55, rawimage.shape[0] * 0.8, 'ID='+repr(img_id), size=12, color='white',
+                 weight="bold")
         ax1.text(rawimage.shape[0] * 0.2, rawimage.shape[0] * 0.05, 'observation', size=20, color='white', weight="bold")
         ax1.axis('off')
         #
-        ax2.imshow(dataimage, origin='lower', cmap="gist_heat")
+        ax2.imshow((dataimage), origin='lower', cmap="gist_heat", vmax=n_max,vmin=n_min)
         ax2.set_title('Image Data', fontsize=font_size)
         ax2.text(dataimage.shape[0] * 0.2, dataimage.shape[0] * 0.05, 'image data', size=20, color='white', weight="bold")
         ax2.axis('off')
@@ -476,6 +544,8 @@ class DataProcess(object):
         ax5.axis('off')
 
         plt.show()
+        fig.savefig(img_name)
+        return 0
 
 
 
