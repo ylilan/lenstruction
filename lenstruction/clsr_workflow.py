@@ -35,10 +35,10 @@ class ClsrWorkflow(object):
         chain_list = self.fitting_seq_src.fit_sequence(fitting_kwargs_list)
         kwargs_result = self.fitting_seq_src.best_fit(bijective=False)
         bic_model = self.fitting_seq_src.bic
-        return bic_model,chain_list, kwargs_result
+        return chain_list, kwargs_result,bic_model
 
 
-    def lensmodel_comp(self, num_img, n_particles,n_iterations,sigma_scale, num_lens_model,fixed_index =0,flexion_option=True):
+    def lensmodel_comp(self,  n_particles,n_iterations,sigma_scale,num_img=1, num_lens_model=4,fixed_index =0,flexion_option=False):
         """
         function to figure out the necessary of increasing lens model complexity. Currently, we only consider up to flexion term.
         :param n_particles: particles numbers of PSO
@@ -46,7 +46,7 @@ class ClsrWorkflow(object):
         :param sigma_scale: sigma scale for PSO
         :param num_img: int, numbers of lensed image
         :param fixed_index: int, index of fixed lensed image
-        :param num_lens_model: numbers of strings contained in lens model list
+        :param num_lens_model: 4, numbers of strings contained in lens model list
         :param flexion_option: bool, default is taking flexion into consideration
         :return: pso results, fitting results of necessary lens model complexity, bic values
         """
@@ -54,7 +54,7 @@ class ClsrWorkflow(object):
         lens_add_fixed_list = []
         for i in range(num_img):
             if i == fixed_index:
-                print ("lens model keep fixed in frame:", i+1)
+                print ("lens model keep fixed in frame:", i)
             else:
                 lens_flexion_index = (i + 1) * num_lens_model - 1
                 lens_remove_fixed_list.append([lens_flexion_index, ['G1', 'G2', 'F1', 'F2'], [0, 0, 0, 0]])
@@ -65,6 +65,7 @@ class ClsrWorkflow(object):
                 lens_add_fixed_list.append([lens_flexion_index, ['G1', 'G2', 'F1', 'F2'], [G1_fix, G2_fix, F1_fix, F2_fix]])
         flexion_add_fixed = [['update_settings', {'lens_add_fixed': lens_add_fixed_list}]]
         print("flexion_fixed:", flexion_add_fixed)
+        kwargs_pso=[]
         kwargs_pso = [['PSO', {'sigma_scale': sigma_scale, 'n_particles': n_particles, 'n_iterations': n_iterations}]]
         fitting_kwargs_fix =  flexion_add_fixed+ kwargs_pso
         bic_model_fix, chain_list_fix, kwargs_result_fix = self.run_fit_sequence(fitting_kwargs_fix)

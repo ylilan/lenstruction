@@ -12,7 +12,7 @@ from photutils import detect_threshold, detect_sources,deblend_sources, source_p
 from photutils.datasets import make_noise_image
 from six.moves import input
 from lenstronomy.Data.imaging_data import ImageData
-#from decomprofile.data_process import DataProcess as dxhDataProcess
+from decomprofile.data_process import DataProcess as dxhDataProcess
 
 
 
@@ -49,6 +49,7 @@ class DataProcess(object):
         self.snr = snr
         self.npixels = npixels
         if exp_time is None:
+            print ("Note: Lenstruction read 'EXPTIME' keyword in the header !")
             exp_time = self.hdul[0].header['EXPTIME']
         else:
             exp_time = exp_time
@@ -58,7 +59,7 @@ class DataProcess(object):
         self.bakground = background
         self.kernel = kernel
         self.interaction= interaction
-        self.image = self.hdul[0].data
+        self.image = self.hdul[1].data#
         self.psf_input = psf
         if segmap is not None:
             self.segmap = fits.open(segmap)
@@ -72,8 +73,8 @@ class DataProcess(object):
         :param dec: dec in deg
         :return:
         """
-        y_detector= np.int(self.wcs.wcs_world2pix([[ra, dec]], 1)[0][0])
-        x_detector = (np.int(self.wcs.wcs_world2pix([[ra, dec]], 1)[0][1]))
+        y_detector = np.int(self.wcs.wcs_world2pix([[ra, dec]], 1)[0][0])
+        x_detector = np.int(self.wcs.wcs_world2pix([[ra, dec]], 1)[0][1])
 
         return x_detector, y_detector
 
@@ -380,7 +381,7 @@ class DataProcess(object):
             image_psf = self.cut_image_psf(x_psf, y_psf, r_cut)
         else:
             #automatically select psf in the field
-            #data_process = dxhDataProcess(fov_image=self.image, target_pos=[0, 0], pos_type='pixel', zp=0)
+            data_process = dxhDataProcess(fov_image=self.image, target_pos=[0, 0], pos_type='pixel', zp=0)
             print ("try to find psf by code itself")
             if self.interaction & pick:
                 psfyn = input('Hint: do you want to pick up the PSF youself? (y/n): ')
@@ -437,7 +438,6 @@ class DataProcess(object):
         data_mask_list = []
         lens_mask_list = []
         plu_mask_out_list = []
-
         for i in range(len(ra)):
             xy = self.radec2detector(ra[i], dec[i])
             x_detector.append(xy[0])
@@ -495,7 +495,6 @@ class DataProcess(object):
         ax2.imshow(segments_deblend, origin='lower')
         for i in range(len(xcenter)):
             ax2.text(xcenter[i], ycenter[i], repr(i), color='r',size = 12)
-            print(i,xcenter[i], ycenter[i])
         ax2.text(image_data.shape[0]*0.5,image_data.shape[0]*0.1,'Seg '+repr(c_index)+' '+'in center',size=12,color='white')
         ax2.set_title('Segmentations (S/N >'+repr(self.snr)+')',fontsize =font_size)
 
@@ -514,18 +513,20 @@ class DataProcess(object):
         dataimage = self.data
         len_mask = self.lens_mask
         plu_mask_out = self.plu_mask
-        n_max=np.max(dataimage)*0.5
-        n_min = np.min(dataimage)
+        n_max=np.nan_to_num(np.log10((dataimage))).max()
+        n_min=np.nan_to_num(np.log10((dataimage))).min()
+       # n_max=-1#np.max(np.log10(dataimage))*0.5
+       # n_min = -3#np.min(np.log10(dataimage))
 
         fig, (ax1, ax2, ax3, ax4,ax5) = plt.subplots(1, 5, figsize=(19, 10))
-        ax1.imshow((rawimage), origin='lower', cmap="gist_heat", vmax=n_max,vmin=n_min)
+        ax1.imshow(np.log10(rawimage), origin='lower', cmap="gist_heat", vmax=n_max,vmin=n_min)
         ax1.set_title('Original Image', fontsize=font_size)
         ax1.text(rawimage.shape[0] * 0.55, rawimage.shape[0] * 0.8, 'ID='+repr(img_id), size=12, color='white',
                  weight="bold")
         ax1.text(rawimage.shape[0] * 0.2, rawimage.shape[0] * 0.05, 'observation', size=20, color='white', weight="bold")
         ax1.axis('off')
         #
-        ax2.imshow((dataimage), origin='lower', cmap="gist_heat", vmax=n_max,vmin=n_min)
+        ax2.imshow(np.log10(dataimage), origin='lower', cmap="gist_heat", vmax=n_max,vmin=n_min)
         ax2.set_title('Image Data', fontsize=font_size)
         ax2.text(dataimage.shape[0] * 0.2, dataimage.shape[0] * 0.05, 'image data', size=20, color='white', weight="bold")
         ax2.axis('off')
