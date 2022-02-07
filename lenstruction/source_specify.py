@@ -11,7 +11,7 @@ class SourceSpecify(object):
         """
         self.source_model_list = source_model_list
 
-    def params(self, re, betax=0, betay=0, kwargs_init = None, kwargs_sigma = None, kwargs_fixed = None, kwargs_lower = None,
+    def params(self, re=0.1, betax=0, betay=0, kwargs_init = None, kwargs_sigma = None, kwargs_fixed = None, kwargs_lower = None,
                          kwargs_upper = None):
         """
         source parameters configuration in lenstronomy keywords arguments.

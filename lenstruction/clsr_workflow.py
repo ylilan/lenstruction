@@ -68,12 +68,12 @@ class ClsrWorkflow(object):
         kwargs_pso=[]
         kwargs_pso = [['PSO', {'sigma_scale': sigma_scale, 'n_particles': n_particles, 'n_iterations': n_iterations}]]
         fitting_kwargs_fix =  flexion_add_fixed+ kwargs_pso
-        bic_model_fix, chain_list_fix, kwargs_result_fix = self.run_fit_sequence(fitting_kwargs_fix)
+        chain_list_fix, kwargs_result_fix,bic_model_fix = self.run_fit_sequence(fitting_kwargs_fix)
         if flexion_option:
             flexion_remove_fixed = [['update_settings', {'lens_remove_fixed': lens_remove_fixed_list}]]
             print ("flexion_remove_fixed:", flexion_remove_fixed)
             fitting_kwargs_free = flexion_remove_fixed + kwargs_pso
-            bic_model_free, chain_list_free, kwargs_result_free = self.run_fit_sequence(fitting_kwargs_free)
+            chain_list_free, kwargs_result_free,bic_model_free = self.run_fit_sequence(fitting_kwargs_free)
         else:
             bic_model_free = 10000000
         if bic_model_free > bic_model_fix:

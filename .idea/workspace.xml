@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="574f04ea-4155-4508-bc89-6853020cd2ea" name="Default Changelist" comment="">
+    <list default="true" id="574f04ea-4155-4508-bc89-6853020cd2ea" name="Default Changelist" comment="follow up the update of lenstronomy 1.9.2">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lenstruction/clsr_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/lenstruction/clsr_analysis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lenstruction/clsr_workflow.py" beforeDir="false" afterPath="$PROJECT_DIR$/lenstruction/clsr_workflow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lenstruction/data_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/lenstruction/data_process.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lenstruction/lens_specify.py" beforeDir="false" afterPath="$PROJECT_DIR$/lenstruction/lens_specify.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lenstruction/source_specify.py" beforeDir="false" afterPath="$PROJECT_DIR$/lenstruction/source_specify.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -69,36 +74,36 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="py" value="315" />
+          <entry key="py" value="316" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="Python" value="315" />
+          <entry key="Python" value="316" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="dummy" value="24" />
-          <entry key="py" value="3988" />
+          <entry key="py" value="4008" />
           <entry key="txt" value="524" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="PLAIN_TEXT" value="548" />
-          <entry key="Python" value="3988" />
+          <entry key="Python" value="4008" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lenstruction/clsr_analysis.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
-              <caret line="12" selection-start-line="12" selection-end-line="12" />
+            <state relative-caret-position="536">
+              <caret line="84" column="17" lean-forward="true" selection-start-line="84" selection-start-column="17" selection-end-line="84" selection-end-column="17" />
               <folding>
                 <element signature="e#0#37#0" expanded="true" />
               </folding>
@@ -106,11 +111,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lenstruction/data_process.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="6" column="31" lean-forward="true" selection-start-line="6" selection-start-column="31" selection-end-line="6" selection-end-column="31" />
+            <state relative-caret-position="234">
+              <caret line="476" column="12" selection-start-line="476" selection-start-column="8" selection-end-line="476" selection-end-column="12" />
             </state>
           </provider>
         </entry>
@@ -118,8 +123,17 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lenstruction/lens_specify.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="97">
-              <caret line="51" column="29" lean-forward="true" selection-start-line="51" selection-start-column="29" selection-end-line="51" selection-end-column="29" />
+            <state relative-caret-position="321">
+              <caret line="38" column="43" lean-forward="true" selection-start-line="38" selection-start-column="43" selection-end-line="38" selection-end-column="43" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/lenstruction/source_specify.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="335">
+              <caret line="27" column="28" lean-forward="true" selection-start-line="27" selection-start-column="28" selection-end-line="27" selection-end-column="28" />
             </state>
           </provider>
         </entry>
@@ -127,8 +141,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lenstruction/clsr_workflow.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="465">
-              <caret line="31" column="64" selection-start-line="31" selection-start-column="64" selection-end-line="31" selection-end-column="64" />
+            <state relative-caret-position="127">
+              <caret line="80" column="38" lean-forward="true" selection-start-line="80" selection-start-column="38" selection-end-line="80" selection-end-column="38" />
               <folding>
                 <element signature="e#0#37#0" expanded="true" />
               </folding>
@@ -139,8 +153,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lenstruction/lenslight_specify.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="21" column="82" selection-start-line="21" selection-start-column="82" selection-end-line="21" selection-end-column="82" />
+            <state relative-caret-position="218">
+              <caret line="20" column="14" selection-start-line="20" selection-start-column="8" selection-end-line="20" selection-end-column="14" />
             </state>
           </provider>
         </entry>
@@ -156,8 +170,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>lens_light</find>
-      <find>type</find>
       <find>magni</find>
       <find>data_mask</find>
       <find>data_assemble</find>
@@ -186,6 +198,8 @@
       <find>imshow</find>
       <find>kwargs_numerics</find>
       <find>print</find>
+      <find>run_fit_sequence</find>
+      <find>plot</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -200,23 +214,23 @@
         <option value="$PROJECT_DIR$/lenstruction/data_preparation.py" />
         <option value="$PROJECT_DIR$/../../lenstronomy_lilan/lenstronomy/lenstronomy/Plots/plot_util.py" />
         <option value="$PROJECT_DIR$/../../lenstronomy_lilan/lenstronomy/lenstronomy/Plots/model_band_plot.py" />
-        <option value="$PROJECT_DIR$/lenstruction/clsr_analysis.py" />
         <option value="$PROJECT_DIR$/../../lenstronomy_lilan/lenstronomy/lenstronomy/Util/param_util.py" />
         <option value="$PROJECT_DIR$/../../lenstronomy_lilan/lenstronomy/lenstronomy/Workflow/fitting_sequence.py" />
         <option value="$PROJECT_DIR$/lenstruction/lenslight_specify.py" />
         <option value="$PROJECT_DIR$/../../lenstronomy_lilan/lenstronomy/lenstronomy/LightModel/light_model.py" />
         <option value="$PROJECT_DIR$/../../lenstronomy_lilan/lenstronomy/lenstronomy/ImSim/image_model.py" />
         <option value="$PROJECT_DIR$/../../lenstronomy_lilan/lenstronomy/lenstronomy/__init__.py" />
+        <option value="$PROJECT_DIR$/lenstruction/clsr_workflow.py" />
         <option value="$PROJECT_DIR$/lenstruction/source_specify.py" />
         <option value="$PROJECT_DIR$/lenstruction/lens_specify.py" />
         <option value="$PROJECT_DIR$/lenstruction/data_process.py" />
-        <option value="$PROJECT_DIR$/lenstruction/clsr_workflow.py" />
+        <option value="$PROJECT_DIR$/lenstruction/clsr_analysis.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="1734" />
-    <option name="y" value="54" />
+    <option name="x" value="41" />
+    <option name="y" value="82" />
     <option name="width" value="1512" />
     <option name="height" value="944" />
   </component>
@@ -526,12 +540,18 @@
       <option name="project" value="LOCAL" />
       <updated>1644243237979</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="follow up the update of lenstronomy 1.9.2">
+      <created>1644243256687</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1644243256687</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1734" y="54" width="1512" height="944" extended-state="0" />
-    <editor active="true" />
+    <frame x="41" y="82" width="1512" height="944" extended-state="0" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.16633132" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -770,13 +790,6 @@
     <entry file="file://$PROJECT_DIR$/../../lenstronomy_lilan/lenstronomy/lenstronomy/Util/util.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/lenstruction/source_specify.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="765">
-          <caret line="51" column="33" selection-start-line="51" selection-start-column="33" selection-end-line="51" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../lenstronomy_lilan/lenstronomy/lenstronomy/SimulationAPI/sim_api.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="420">
@@ -882,36 +895,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/lenstruction/lenslight_specify.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="21" column="82" selection-start-line="21" selection-start-column="82" selection-end-line="21" selection-end-column="82" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../lenstronomy_lilan/lenstronomy/lenstronomy/LightModel/Profiles/sersic.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="450">
           <caret line="32" column="27" selection-start-line="32" selection-start-column="27" selection-end-line="32" selection-end-column="27" />
           <folding>
             <element signature="e#81#99#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lenstruction/lens_specify.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="97">
-          <caret line="51" column="29" lean-forward="true" selection-start-line="51" selection-start-column="29" selection-end-line="51" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lenstruction/clsr_workflow.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="465">
-          <caret line="31" column="64" selection-start-line="31" selection-start-column="64" selection-end-line="31" selection-end-column="64" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -926,20 +915,51 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/lenstruction/clsr_analysis.py">
+    <entry file="file://$PROJECT_DIR$/lenstruction/clsr_workflow.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="12" selection-start-line="12" selection-end-line="12" />
+        <state relative-caret-position="127">
+          <caret line="80" column="38" lean-forward="true" selection-start-line="80" selection-start-column="38" selection-end-line="80" selection-end-column="38" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/lenstruction/lenslight_specify.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="218">
+          <caret line="20" column="14" selection-start-line="20" selection-start-column="8" selection-end-line="20" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lenstruction/source_specify.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="335">
+          <caret line="27" column="28" lean-forward="true" selection-start-line="27" selection-start-column="28" selection-end-line="27" selection-end-column="28" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lenstruction/lens_specify.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="321">
+          <caret line="38" column="43" lean-forward="true" selection-start-line="38" selection-start-column="43" selection-end-line="38" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/lenstruction/data_process.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="31" lean-forward="true" selection-start-line="6" selection-start-column="31" selection-end-line="6" selection-end-column="31" />
+        <state relative-caret-position="234">
+          <caret line="476" column="12" selection-start-line="476" selection-start-column="8" selection-end-line="476" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lenstruction/clsr_analysis.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="536">
+          <caret line="84" column="17" lean-forward="true" selection-start-line="84" selection-start-column="17" selection-end-line="84" selection-end-column="17" />
+          <folding>
+            <element signature="e#0#37#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

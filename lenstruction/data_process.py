@@ -12,7 +12,6 @@ from photutils import detect_threshold, detect_sources,deblend_sources, source_p
 from photutils.datasets import make_noise_image
 from six.moves import input
 from lenstronomy.Data.imaging_data import ImageData
-from decomprofile.data_process import DataProcess as dxhDataProcess
 
 
 
@@ -20,7 +19,7 @@ class DataProcess(object):
     """
     The class contains useful fuctions to do, e.g. cut image, calculate cutsize, make mask of images.....
     """
-    def __init__(self, data, snr=3.0, npixels=20,deltaPix=None, exp_time=None,background_rms=None,
+    def __init__(self, data, snr=3.0, npixels=20, deltaPix=None, exp_time=None,background_rms=None,
                  wcs_data=None, background=None, segmap=None, psf=None, kernel = None, interaction = True):
         """
 
@@ -59,7 +58,7 @@ class DataProcess(object):
         self.bakground = background
         self.kernel = kernel
         self.interaction= interaction
-        self.image = self.hdul[1].data#
+        self.image = self.hdul[0].data
         self.psf_input = psf
         if segmap is not None:
             self.segmap = fits.open(segmap)
@@ -513,20 +512,16 @@ class DataProcess(object):
         dataimage = self.data
         len_mask = self.lens_mask
         plu_mask_out = self.plu_mask
-        n_max=np.nan_to_num(np.log10((dataimage))).max()
-        n_min=np.nan_to_num(np.log10((dataimage))).min()
-       # n_max=-1#np.max(np.log10(dataimage))*0.5
-       # n_min = -3#np.min(np.log10(dataimage))
 
         fig, (ax1, ax2, ax3, ax4,ax5) = plt.subplots(1, 5, figsize=(19, 10))
-        ax1.imshow(np.log10(rawimage), origin='lower', cmap="gist_heat", vmax=n_max,vmin=n_min)
+        ax1.imshow((rawimage), origin='lower', cmap="gist_heat")
         ax1.set_title('Original Image', fontsize=font_size)
         ax1.text(rawimage.shape[0] * 0.55, rawimage.shape[0] * 0.8, 'ID='+repr(img_id), size=12, color='white',
                  weight="bold")
         ax1.text(rawimage.shape[0] * 0.2, rawimage.shape[0] * 0.05, 'observation', size=20, color='white', weight="bold")
         ax1.axis('off')
         #
-        ax2.imshow(np.log10(dataimage), origin='lower', cmap="gist_heat", vmax=n_max,vmin=n_min)
+        ax2.imshow((dataimage), origin='lower', cmap="gist_heat")
         ax2.set_title('Image Data', fontsize=font_size)
         ax2.text(dataimage.shape[0] * 0.2, dataimage.shape[0] * 0.05, 'image data', size=20, color='white', weight="bold")
         ax2.axis('off')

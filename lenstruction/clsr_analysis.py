@@ -87,8 +87,8 @@ class ClsrAnalysis(object):
                 ax2 = axes[1]
                 ax3 = axes[2]
                 img_index = data_index
-            model_plot.data_plot(ax=ax1, band_index=band_index, text='Observed'+text,font_size = font_size)
-            model_plot.model_plot(ax=ax2, image_names=True, band_index=band_index,font_size = font_size, text='Modeled'+text)
+            model_plot.data_plot(ax=ax1, band_index=band_index, text='Observed '+text,font_size = font_size)
+            model_plot.model_plot(ax=ax2, image_names=True, band_index=band_index,font_size = font_size, text='Modeled '+text)
             model_plot.normalized_residual_plot(ax=ax3, v_min=-6, v_max=6, band_index=band_index,font_size = font_size)
         f.savefig(img_name+'residual.pdf', bbox_inches='tight')
         if fig_close:

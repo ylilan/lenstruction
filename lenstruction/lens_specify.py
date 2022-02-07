@@ -111,13 +111,13 @@ class LensSpecify(object):
                     kwargs_lower_lens_tmp.append({'gamma1':-1,'gamma2':-1})
                     kwargs_upper_lens_tmp.append({'gamma1':1,'gamma2':1})
                 elif lens_type == 'CONVERGENCE':
-                    kwargs_lens_sigma_tmp.append({'kappa_ext':0.1})
+                    kwargs_lens_sigma_tmp.append({'kappa':0.1})
                     if i==fixed_index:
                         kwargs_fixed_lens_tmp.append(kwagrs_lens_list[fixed_index][2])
                     else:
                         kwargs_fixed_lens_tmp.append({'ra_0': kwagrs_lens_list[i][2]['ra_0'],'dec_0': kwagrs_lens_list[i][1]['dec_0']})
-                    kwargs_lower_lens_tmp.append({'kappa_ext':-0.2}) #
-                    kwargs_upper_lens_tmp.append({'kappa_ext':3}) #
+                    kwargs_lower_lens_tmp.append({'kappa':-0.2}) #
+                    kwargs_upper_lens_tmp.append({'kappa':3}) #
                 elif lens_type == 'FLEXIONFG':
                     kwargs_lens_sigma_tmp.append({'F1':0.01,'F2':0.01,'G1':0.01,'G2':0.01})
                     kwargs_fixed_lens_tmp.append({'ra_0': kwagrs_lens_list[i][3]['ra_0'],'dec_0': kwagrs_lens_list[i][3]['dec_0'],
@@ -194,7 +194,7 @@ class LensSpecify(object):
             elif lens_type =='CONVERGENCE':
                 xkappa, ykappa = self.radec2detector(ra, dec)
                 kappa = self.kappa[ xkappa, ykappa]
-                kwargs_lens.append({'kappa_ext': kappa, 'ra_0': ra_center, 'dec_0': dec_center})
+                kwargs_lens.append({'kappa': kappa, 'ra_0': ra_center, 'dec_0': dec_center})
             elif lens_type == 'FLEXIONFG':
                 kwargs_lens.append(
                     {'F1': 0, 'F2': 0, 'G1': 0, 'G2': 0, 'ra_0': ra_center, 'dec_0': dec_center})
@@ -240,7 +240,7 @@ class LensSpecify(object):
                                                         util.image2array(yaxes), kwargs=kwargs_lens_in, diff = diff)
                 #kappa_center = kappa.mean()
                 kappa_center = util.array2image(kappa)[int(r_cut + 1), int(r_cut + 1)]
-                kwargs_lens.append({'kappa_ext': kappa_center, 'ra_0': ra_center, 'dec_0': dec_center})
+                kwargs_lens.append({'kappa': kappa_center, 'ra_0': ra_center, 'dec_0': dec_center})
             elif lens_type == 'FLEXION':
                 g1, g2, g3, g4 = LensModel(['INTERPOL']).flexion(util.image2array(xaxes),
                                                                    util.image2array(yaxes), kwargs=kwargs_lens_in, diff = diff)
