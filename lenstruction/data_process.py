@@ -404,7 +404,8 @@ class DataProcess(object):
         if kernel_size is None:
             kernel_size = np.shape(image_psf)[0]
 
-        image_psf_cut = kernel_util.cut_psf(image_psf, psf_size=kernel_size)#why using kernel ?
+        image_psf_cut = np.abs(kernel_util.cut_psf(image_psf, psf_size=kernel_size))#why using kernel ?
+     
 
 
         if pixel_size is None:

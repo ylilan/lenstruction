@@ -29,9 +29,9 @@ def plot_mcmc(chain_list_mcmc, labels=None,smooth=0.5,figname='mcmc'):
     :return:
     """
     sampler_type, samples_mcmc, param_mcmc, dist_mcmc = chain_list_mcmc[0]
-    print("number of non-linear parameters in the MCMC process: ", len(param_mcmc))
-    print("parameters in order: ", param_mcmc)
-    print("number of evaluations in the MCMC process: ", np.shape(samples_mcmc)[0])
+    # print("number of non-linear parameters in the MCMC process: ", len(param_mcmc))
+    # print("parameters in order: ", param_mcmc)
+    # print("number of evaluations in the MCMC process: ", np.shape(samples_mcmc)[0])
     if labels is None:
         labels = param_mcmc
     if not samples_mcmc == []:
@@ -69,8 +69,10 @@ class ClsrAnalysis(object):
         :param font_size: font_size
         :return:
         """
+        # model_plot = ModelPlot(self.multi_band_list, self.kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat",
+        #          multi_band_type=self.multi_band_type,likelihood_mask_list=likelihood_mask_list)
         model_plot = ModelPlot(self.multi_band_list, self.kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat",
-                 multi_band_type=self.multi_band_type,likelihood_mask_list=likelihood_mask_list)
+                 multi_band_type=self.multi_band_type)
         num_bands = len(self.kwargs_data_joint['multi_band_list'])
         if num_bands >1:
             f, axes = plt.subplots(num_bands, 3, figsize=(22, 18))
@@ -87,8 +89,8 @@ class ClsrAnalysis(object):
                 ax2 = axes[1]
                 ax3 = axes[2]
                 img_index = data_index
-            model_plot.data_plot(ax=ax1, band_index=band_index, text='Observed '+text,font_size = font_size)
-            model_plot.model_plot(ax=ax2, image_names=True, band_index=band_index,font_size = font_size, text='Modeled '+text)
+            model_plot.data_plot(ax=ax1, band_index=band_index, text='Observed '+text+repr(img_index+1),font_size = font_size)
+            model_plot.model_plot(ax=ax2, image_names=True, band_index=band_index,font_size = font_size, text='Modeled '+text+repr(img_index+1))
             model_plot.normalized_residual_plot(ax=ax3, v_min=-6, v_max=6, band_index=band_index,font_size = font_size)
         f.savefig(img_name+'residual.pdf', bbox_inches='tight')
         if fig_close:
