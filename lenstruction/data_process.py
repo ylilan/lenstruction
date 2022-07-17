@@ -12,6 +12,7 @@ from photutils import detect_threshold, detect_sources,deblend_sources, source_p
 from photutils.datasets import make_noise_image
 from six.moves import input
 from lenstronomy.Data.imaging_data import ImageData
+#from galight.data_process import DataProcess as galightDataProcess
 
 
 
@@ -19,7 +20,7 @@ class DataProcess(object):
     """
     The class contains useful fuctions to do, e.g. cut image, calculate cutsize, make mask of images.....
     """
-    def __init__(self, data, snr=3.0, npixels=20, deltaPix=None, exp_time=None,background_rms=None,
+    def __init__(self, image_data, header, snr=3.0, npixels=20, deltaPix=None, exp_time=None,background_rms=None,
                  wcs_data=None, background=None, segmap=None, psf=None, kernel = None, interaction = True):
         """
 
@@ -34,9 +35,10 @@ class DataProcess(object):
         :param interaction: bool, default is True.
         """
 
-        self.hdul = fits.open(data)
+        self.header = header
+
         if wcs_data is None:
-            self.wcs = wcs.WCS(self.hdul[0].header)
+            self.wcs = wcs.WCS(header)
         else:
             print ("wcs is not none ")
             self.wcs = wcs_data
@@ -49,7 +51,7 @@ class DataProcess(object):
         self.npixels = npixels
         if exp_time is None:
             print ("Note: Lenstruction read 'EXPTIME' keyword in the header !")
-            exp_time = self.hdul[0].header['EXPTIME']
+            exp_time = header['EXPTIME']
         else:
             exp_time = exp_time
         self.exp_time = exp_time
@@ -58,7 +60,7 @@ class DataProcess(object):
         self.bakground = background
         self.kernel = kernel
         self.interaction= interaction
-        self.image = self.hdul[0].data
+        self.image = image_data#self.hdul[0].data
         self.psf_input = psf
         if segmap is not None:
             self.segmap = fits.open(segmap)
@@ -126,6 +128,7 @@ class DataProcess(object):
          :param y: int, y coordinate in pixel unit
          :param r_cut: int format value, radius of cut out image
          :return: cutted image
+         
          """
         image_cutted = self.image[x - r_cut:x + r_cut + 1, y - r_cut:y + r_cut + 1]
         return image_cutted
@@ -363,7 +366,7 @@ class DataProcess(object):
        return kwargs_data, kwargs_seg, [xlenlight, ylenlight]
 
 
-    def pick_psf(self, ra=None, dec=None, r_cut=15, pixel_size=None, kernel_size=None, pick=True):
+    def pick_psf(self, ra=None, dec=None, r_cut=50, pixel_size=None, kernel_size=None, pick=True):
         """
         select psf
         :param x:  x coordinate.
@@ -380,23 +383,24 @@ class DataProcess(object):
             image_psf = self.cut_image_psf(x_psf, y_psf, r_cut)
         else:
             #automatically select psf in the field
-            data_process = dxhDataProcess(fov_image=self.image, target_pos=[0, 0], pos_type='pixel', zp=0)
-            print ("try to find psf by code itself")
-            if self.interaction & pick:
-                psfyn = input('Hint: do you want to pick up the PSF youself? (y/n): ')
-                if psfyn =='y':
-                    print(('Please only pick 1 psf, otherwise only the 1st will be chosen'))
-                    data_process.find_PSF(radius=r_cut, user_option=True)
-                    image_psf = data_process.PSF_list[0]
-                elif psfyn =='n':
-                    data_process.find_PSF(radius=r_cut, user_option=False)
-                    image_psf = data_process.PSF_list[0]
-                else:
-                    raise ValueError("Please input 'y' or 'n' !")
-            else:
-                data_process.find_PSF(radius=r_cut, user_option=False)
-                image_psf = data_process.PSF_list[0]
-
+            #data_process = galightDataProcess(fov_image=self.image, target_pos = [0,0], pos_type = 'pixel',                                                   )
+            # print ("try to find psf by code itself")
+            # if self.interaction & pick:
+            #     psfyn = input('Hint: do you want to pick up the PSF youself? (y/n): ')
+            #     if psfyn =='y':
+            #         print(('Please only pick 1 psf, otherwise only the 1st will be chosen'))
+            #         data_process.find_PSF(radius=r_cut, user_option=True)
+            #         image_psf = data_process.PSF_list[0]
+            #     elif psfyn =='n':
+            #         data_process.find_PSF(radius=r_cut, user_option=False)
+            #         image_psf = data_process.PSF_list[0]
+            #     else:
+            #         raise ValueError("Please input 'y' or 'n' !")
+            # else:
+            #     data_process.find_PSF(radius=r_cut, user_option=False)
+            #     image_psf = data_process.PSF_list[0]
+            print ("Try add psf function from Galight")
+            # TODO Try add psf function from Galight
         if kernel_size is None:
             kernel_size = np.shape(image_psf)[0]
 
@@ -416,7 +420,7 @@ class DataProcess(object):
 
 
     def params(self, ra, dec, ra_psf = None, dec_psf =None, r_cut=100, add_mask=5, pick_choice=False,
-               multi_band_type='joint-linear', kwargs_numerics={},img_name='prodata_psf.pdf',img_id=0):
+               multi_band_type='joint-linear', kwargs_numerics={}, img_name='prodata_psf.pdf',img_id=0, if_plot=True):
         """
          image data parameters configuration in lenstronomy keywords arguments
         :param ra:
@@ -449,7 +453,8 @@ class DataProcess(object):
             lens_mask_list.append(self.lens_mask)
             plu_mask_out_list.append(self.plu_mask)
             #plot data, lens light, pollution
-            self.plot_prodata_psf(img_name=img_name,img_id=img_id)
+            if if_plot:
+                self.plot_prodata_psf(img_name=img_name,img_id=img_id)
         kwargs_data_joint = {'multi_band_list': multi_band_list, 'multi_band_type': multi_band_type}
         self.data_mask_list = data_mask_list
         self.lens_mask_list = lens_mask_list
