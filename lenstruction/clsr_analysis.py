@@ -73,6 +73,7 @@ class ClsrAnalysis(object):
         #          multi_band_type=self.multi_band_type,likelihood_mask_list=likelihood_mask_list)
         model_plot = ModelPlot(self.multi_band_list, self.kwargs_model, kwargs_result, arrow_size=0.02, cmap_string="gist_heat",
                  multi_band_type=self.multi_band_type)
+        self.model_plot=model_plot
         num_bands = len(self.kwargs_data_joint['multi_band_list'])
         if num_bands >1:
             f, axes = plt.subplots(num_bands, 3, figsize=(22, 18))
@@ -103,6 +104,7 @@ class ClsrAnalysis(object):
                                font_size=font_size, text ="Source"+text_source,  plot_scale='log', v_min =-5,
                                with_caustics=True)
         f_s.savefig(img_name +'source.pdf')
+
         if fig_close:
             plt.close(f_s)
 

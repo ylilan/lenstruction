@@ -133,11 +133,13 @@ class ClsrWorkflow(object):
                 fitting_kwargs = start_kwargs_shapelet + fit_kwargs_shapelet + kwargs_pso
             if bic_run:
                 print ("nmax",nmax,"fitting_kwargs",fitting_kwargs)
-                bic_model,chain_list, kwargs_result = self.run_fit_sequence(fitting_kwargs)
+                chain_list, kwargs_result, bic_model = self.run_fit_sequence(fitting_kwargs)
+                print ("bic_model",bic_model, "bic_model_list",bic_model_list)
                 if bic_model >  bic_model_list[-1]:
                     if bic_option:
                         bic_run = False
                         if bic_model > bic_model_in[bic_in_len-1]:
+                        #if bic_model > bic_model_in[-1]:
                             print ("bic_model_in",bic_model_in)
                             print ("no necessary to add SHAPELETS !")
                             fix_kwargs_shapelet=[['update_settings', {'source_add_fixed': [[1, ['beta'], [sr]]]}]]

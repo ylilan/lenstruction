@@ -103,11 +103,11 @@ class DataProcess(object):
         mask_0 = make_source_mask(img, nsigma=3, npixels=5, dilate_size=11)
         mask_1 = (np.isnan(img))
         mask = mask_0 + mask_1
-        #bkg = Background2D(img, (5, 5), filter_size=(3, 3), sigma_clip=sigma_clip,
-        #                   bkg_estimator=bkg_estimator, mask=mask)
-        #back = bkg.background * ~mask_1
-        #return img - back
-        return img
+        bkg = Background2D(img, (5, 5), filter_size=(3, 3), sigma_clip=sigma_clip,
+                           bkg_estimator=bkg_estimator, mask=mask)
+        back = bkg.background * ~mask_1
+        return img - back
+        #return img
 
     def cut_image(self, x, y, r_cut):
         """
@@ -269,7 +269,6 @@ class DataProcess(object):
 
 
        if self.segmap is None and self.interaction:
-      # if self.interaction:
             self.plot_segmentation(image, segments_deblend_list, xcenter, ycenter, c_index)
             #source light
             if pick_choice:
@@ -368,7 +367,7 @@ class DataProcess(object):
 
     def pick_psf(self, ra=None, dec=None, r_cut=50, pixel_size=None, kernel_size=None, pick=True):
         """
-        select psf
+        select psf, either by coordinate or from input directly
         :param x:  x coordinate.
         :param y:  y coordinate.
         :param r_cut: radius size of the psf.
@@ -404,8 +403,7 @@ class DataProcess(object):
         if kernel_size is None:
             kernel_size = np.shape(image_psf)[0]
 
-        image_psf_cut = np.abs(kernel_util.cut_psf(image_psf, psf_size=kernel_size))#why using kernel ?
-     
+        image_psf_cut = kernel_util.cut_psf(image_psf, psf_size=kernel_size)#re-sized and re-normalized PSF
 
 
         if pixel_size is None:
@@ -415,7 +413,6 @@ class DataProcess(object):
 
         kwargs_psf = {'psf_type': 'PIXEL', 'kernel_point_source': image_psf_cut, 'pixel_size': pixel_size}
         self.psf = image_psf_cut
-        # TODO adding simulated psf
         return kwargs_psf
 
 
@@ -466,7 +463,7 @@ class DataProcess(object):
 
 
 
-    def numerics(self, supersampling_factor=1, supersampling_convolution=False):
+    def numerics(self, supersampling_factor=4, supersampling_convolution=False):
         """
         numerical option of the image data and convolution
         :param supersampling_factor: int, factor of higher resolution sub-pixel sampling of surface brightness
@@ -491,10 +488,10 @@ class DataProcess(object):
         :param c_index:
         :return:
         """
-        n_max=np.max(image_data)*0.5
-        n_min = np.min(image_data)
+        n_max=1 #np.max(image_data)*0.5
+        n_min = -2#np.min(image_data)
         fig, (ax1, ax2) = plt.subplots(1, 2,figsize=(10,6))
-        ax1.imshow((image_data), origin='lower',cmap="gist_heat", vmax=n_max,vmin=n_min)
+        ax1.imshow(np.log10(image_data), origin='lower',cmap="gist_heat")#, vmax=n_max,vmin=n_min)
         ax1.set_title('Input Image',fontsize =font_size )
 
         ax2.imshow(segments_deblend, origin='lower')
