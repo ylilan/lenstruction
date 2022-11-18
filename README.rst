@@ -31,7 +31,7 @@ Requirements
 ------------
 make sure you have already installed lenstronomy (>version 0.9.2), if not, please instal lenstronomy first.    
 
-$ pip install lenstronomy==1.2.0 --user
+$ pip install lenstronomy==1.10.3 --user
 
 Modelling Features
 ------------
@@ -49,4 +49,4 @@ If you make use of ``lenstruction``, please cite
 
 More  
 ------------
-The code is open access, you can hack it or email me: <ylilan@astro.ucla.edu>.
+The code is open access, you can hack it or email me: <lilan.yang@ipmu.jp>.
